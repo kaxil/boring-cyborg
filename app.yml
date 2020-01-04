@@ -13,31 +13,31 @@
 # The list of events the GitHub App subscribes to.
 # Uncomment the event names below to enable them.
 default_events:
-# - check_run
-# - check_suite
-# - commit_comment
-# - create
-# - delete
-# - deployment
-# - deployment_status
-# - fork
-# - gollum
-# - issue_comment
-- issues
-# - label
-# - milestone
-# - member
-# - membership
-# - org_block
-# - organization
-# - page_build
-# - project
-# - project_card
-# - project_column
-# - public
-# - pull_request
-# - pull_request_review
-# - pull_request_review_comment
+  # - check_run
+  # - check_suite
+  # - commit_comment
+  # - create
+  # - delete
+  # - deployment
+  # - deployment_status
+  # - fork
+  # - gollum
+  # - issue_comment
+  - issues
+  - label
+  # - milestone
+  # - member
+  # - membership
+  # - org_block
+  # - organization
+  # - page_build
+  # - project
+  # - project_card
+  # - project_column
+  # - public
+  - pull_request
+  - pull_request_review
+  - pull_request_review_comment
 # - push
 # - release
 # - repository
@@ -82,7 +82,7 @@ default_permissions:
 
   # Pull requests and related comments, assignees, labels, milestones, and merges.
   # https://developer.github.com/v3/apps/permissions/#permission-on-pull-requests
-  # pull_requests: read
+  pull_requests: write
 
   # Manage the post-receive hooks for a repository.
   # https://developer.github.com/v3/apps/permissions/#permission-on-repository-hooks
@@ -132,7 +132,7 @@ default_permissions:
 # url: https://example.com/
 
 # A description of the GitHub App.
-# description: A description of my awesome app
+description: A Github bot to automatically label PRs, issues and perform the boring operations
 
 # Set to true when your GitHub App is available to the public or false when it is only accessible to the owner of the app.
 # Default: true

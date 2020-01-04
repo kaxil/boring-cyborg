@@ -1,13 +1,13 @@
 {
-  "name": "github-bot",
+  "name": "boring-cyborg",
   "version": "1.0.0",
   "private": true,
   "description": "🤖 A Github bot to automatically label PRs, issues and perform the boring operations",
-  "author": "Kaxil Naik <kaxilnaik@gmail.com>",
+  "author": "Kaxil Naik",
   "license": "ISC",
-  "repository": "https://github.com/kaxil/github-bot.git",
-  "homepage": "https://github.com/kaxil/github-bot",
-  "bugs": "https://github.com/kaxil/github-bot/issues",
+  "repository": "https://github.com/kaxil/boring-cyborg.git",
+  "homepage": "https://github.com/kaxil/boring-cyborg",
+  "bugs": "https://github.com/kaxil/boring-cyborg/issues",
   "keywords": [
     "probot",
     "github",
@@ -21,7 +21,8 @@
     "test:watch": "jest --watch --notify --notifyMode=change --coverage"
   },
   "dependencies": {
-    "probot": "^9.5.3"
+    "probot": "^9.8.1",
+    "ignore": "^5.1.4"
   },
   "devDependencies": {
     "jest": "^24.9.0",
