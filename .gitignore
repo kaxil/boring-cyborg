@@ -5,4 +5,16 @@ npm-debug.log
 .env
 package-lock.json
 coverage
+
+# PyCharm
 .idea/
+*.iml
+
+# Visual Studio Code
+.vscode/
+
+# vim
+*.swp
+
+# OSX
+.DS_Store

@@ -3,13 +3,17 @@
 🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically label PRs, issues and 
 performs all the boring operations that you don't want to do.
 
+![Using Boring Cyborg Probot](./assets/usage-screenshot-1.png)
+
 ## Features
 
 * Add labels based on the path of the file that are modified in the PR.
 
 ## Usage
 
-After installing the Github app, create `.github/boring-cyborg.yml` in the default branch to enable it:
+1. **[Configure the Github App](https://github.com/apps/boring-cyborg)**
+2. After installing the Github app, create `.github/boring-cyborg.yml` in the default branch to enable it
+3. It will start scanning for pull requests within few minutes.
 
 ```yaml
 # Enable "labeler" for your PR that would add labels to PRs based on the paths that are modified in the PR. 
