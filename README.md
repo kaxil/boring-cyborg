@@ -12,6 +12,7 @@ performs all the boring operations that you don't want to do.
 * Add labels based on the path of the file that are modified in the PR.
 * Welcome new users to your project when they open their first Issue/PR or first merged PR by an
 automated comment. 
+* Insert Issue (Jira/Github etc) link in PR description based on the Issue ID in PR title.
 
 ## Usage
 
@@ -51,6 +52,22 @@ firstPRMergeComment: >
 firstIssueWelcomeComment: >
   Thanks for opening your first issue here! Be sure to follow the issue template!
 
+insertIssueLinkInPrDescription:
+   # specify the placeholder for the issue link that should be present in the description
+  descriptionIssuePlaceholderRegexp: "^Issue link: (.*)$"
+  matchers:
+      # you can have several matches - for different types of issues
+      # only the first matching entry is replaced
+      jiraIssueMatch:
+          # specify the regexp of issue id that you can find in the title of the PR
+          # the match groups can be used to build the issue id (${1}, ${2}, etc.).
+          titleIssueIdRegexp: \[(AIRFLOW-[0-9]{4})\]
+          # the issue link to be added. ${1}, ${2} ... are replaced with the match groups from the
+          # title match (remember to use quotes)
+          descriptionIssueLink: "[${1}](https://issues.apache.org/jira/browse/${1}/)"
+      docOnlyIssueMatch:
+          titleIssueIdRegexp: \[(AIRFLOW-X{4})\]
+          descriptionIssueLink: "`Document only change, no JIRA issue`"
 ```
 
 ## Setup

@@ -1,5 +1,6 @@
 const labeler = require('./lib/labeler')
 const greetings = require('./lib/greetings')
+const issuelink = require('./lib/issuelink')
 const utils = require('./lib/utils')
 
 module.exports = app => {
@@ -35,5 +36,15 @@ module.exports = app => {
   app.on('issues.opened', async context => {
     const config = await utils.getConfig(context)
     await greetings.commentOnfirstIssue(context, config)
+  })
+
+  // "IssueLink" - Update issue links in PRs
+  app.on([
+    'pull_request.opened',
+    'pull_request.reopened',
+    'pull_request.edited',
+    'pull_request.synchronize'], async context => {
+    const config = await utils.getConfig(context)
+    await issuelink.insertIssueLinkInPrDescription(context, config)
   })
 }
