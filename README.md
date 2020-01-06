@@ -3,7 +3,9 @@
 🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically label PRs, issues and 
 performs all the boring operations that you don't want to do.
 
-![Using Boring Cyborg Probot](./assets/usage-screenshot-1.png)
+![Using Boring Cyborg Probot to add new labels](./assets/usage-screenshot-1.png)
+
+![Congratulate user on first merged PR](./assets/usage-first-merged-pr.gif)
 
 ## Features
 
