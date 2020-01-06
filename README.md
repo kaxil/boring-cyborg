@@ -12,6 +12,7 @@ performs all the boring operations that you don't want to do.
 * Add labels based on the path of the file that are modified in the PR.
 * Welcome new users to your project when they open their first Issue/PR or first merged PR by an
 automated comment. 
+* Insert Issue (Jira/Github etc) link in PR description based on the Issue ID in PR title.
 
 ## Usage
 
