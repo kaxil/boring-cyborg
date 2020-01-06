@@ -8,6 +8,8 @@ performs all the boring operations that you don't want to do.
 ## Features
 
 * Add labels based on the path of the file that are modified in the PR.
+* Welcome new users to your project when they open their first Issue/PR or first merged PR by an
+automated comment. 
 
 ## Usage
 
@@ -33,7 +35,20 @@ labelPRBasedOnFilePath:
     
   # Add 'test' label to any change to *.spec.js files within the source dir
   test:
-    - src/**/*.spec.js  
+    - src/**/*.spec.js
+
+# Comment to be posted to welcome users when they open their first PR
+firstPRWelcomeComment: >
+  Thanks for opening this pull request! Please check out our contributing guidelines.
+
+# Comment to be posted to congratulate user on their first merged PR
+firstPRMergeComment: >
+  Awesome work, congrats on your first merged pull request!
+
+# Comment to be posted to on first time issues
+firstIssueWelcomeComment: >
+  Thanks for opening your first issue here! Be sure to follow the issue template!
+
 ```
 
 ## Setup
