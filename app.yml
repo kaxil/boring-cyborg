@@ -58,7 +58,7 @@ default_permissions:
 
   # Checks on code.
   # https://developer.github.com/v3/apps/permissions/#permission-on-checks
-  # checks: read
+  checks: write
 
   # Repository contents, commits, branches, downloads, releases, and merges.
   # https://developer.github.com/v3/apps/permissions/#permission-on-contents
@@ -126,10 +126,10 @@ default_permissions:
 
 
 # The name of the GitHub App. Defaults to the name specified in package.json
-# name: My Probot App
+name: boring-cyborg
 
 # The homepage of your GitHub App.
-# url: https://example.com/
+url: https://github.com/kaxil/boring-cyborg
 
 # A description of the GitHub App.
 description: A Github bot to automatically label PRs, issues and perform the boring operations
