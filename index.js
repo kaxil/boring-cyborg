@@ -1,6 +1,7 @@
 const labeler = require('./lib/labeler')
 const greetings = require('./lib/greetings')
 const issuelink = require('./lib/issuelink')
+const titleValidator = require('./lib/title_validator')
 const utils = require('./lib/utils')
 
 module.exports = app => {
@@ -47,4 +48,15 @@ module.exports = app => {
     const config = await utils.getConfig(context)
     await issuelink.insertIssueLinkInPrDescription(context, config)
   })
+
+  // "Commit Validator" - validate commit messages for regular expression
+  app.on([
+    'pull_request.opened',
+    'pull_request.reopened',
+    'pull_request.edited',
+    'pull_request.synchronize'], async context => {
+    const config = await utils.getConfig(context)
+    await titleValidator.verifyTitles(context, config)
+  })
+
 }
