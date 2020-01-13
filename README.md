@@ -7,12 +7,17 @@ performs all the boring operations that you don't want to do.
 
 ![Congratulate user on first merged PR](./assets/usage-first-merged-pr.gif)
 
+![Verifies that commit title matches regexp (single commit)](./assets/usage-wrong-commit-title.png)
+
+![Verifies that PR title matches regexp (multiple commits)](./assets/usage-wrong-PR-title.png)
+
 ## Features
 
 * Add labels based on the path of the file that are modified in the PR.
 * Welcome new users to your project when they open their first Issue/PR or first merged PR by an
 automated comment. 
 * Insert Issue (Jira/Github etc) link in PR description based on the Issue ID in PR title.
+* Verifies if commits/PR titles match the regular expression specified
 
 ## Usage
 
@@ -69,6 +74,19 @@ insertIssueLinkInPrDescription:
     docOnlyIssueMatch:
       titleIssueIdRegexp: \[(AIRFLOW-X{4})\]
       descriptionIssueLink: "`Document only change, no JIRA issue`"
+
+# Verifies if commit/PR titles match the regexp specified
+verifyTitles:
+  # Regular expression that should be matched by titles of commits or PR
+  titleRegexp: ^\[AIRFLOW-[0-9]{4}\].*$|^\[AIRFLOW-XXXX\].*$
+  # If set to true, it will only check the commit in case there is a single commit.
+  # In case of multiple commits it will check PR title.
+  # This reflects the standard behaviour of Github that for `Squash & Merge` GitHub
+  # takes the title of the squashed commit from PR title rather than from commit message ¯\_(ツ)_/¯
+  # For single-commit PRs it takes the squashed commit message from the commit as expected.
+  #
+  # If set to false it will check all commit messages. This is useful when you do not squash commits at merge.
+  validateEitherPrOrSingleCommitTitle: true
 ```
 
 ## Setup
