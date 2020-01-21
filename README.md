@@ -15,9 +15,11 @@ performs all the boring operations that you don't want to do.
 
 * Add labels based on the path of the file that are modified in the PR.
 * Welcome new users to your project when they open their first Issue/PR or first merged PR by an
-automated comment. 
+automated comment.
 * Insert Issue (Jira/Github etc) link in PR description based on the Issue ID in PR title.
 * Verifies if commits/PR titles match the regular expression specified
+* Check if a branch is up to date with the master when specific files are modified in the PR. 
+This is helpful when you desire the changes to be applied sequentially, for example, alembic migrations.
 
 ## Usage
 
@@ -26,7 +28,7 @@ automated comment.
 3. It will start scanning for pull requests within few minutes.
 
 ```yaml
-# Enable "labeler" for your PR that would add labels to PRs based on the paths that are modified in the PR. 
+# Enable "labeler" for your PR that would add labels to PRs based on the paths that are modified in the PR.
 labelPRBasedOnFilePath:
   # Add 'label1' to any changes within 'example' folder or any subfolders
   label1:
@@ -40,7 +42,7 @@ labelPRBasedOnFilePath:
   area/core:
     - src/core/*
     - src/core/**/*  
-    
+
   # Add 'test' label to any change to *.spec.js files within the source dir
   test:
     - src/**/*.spec.js
@@ -87,6 +89,15 @@ verifyTitles:
   #
   # If set to false it will check all commit messages. This is useful when you do not squash commits at merge.
   validateEitherPrOrSingleCommitTitle: true
+
+# Check if the branch is up to date with master when certain files are modified
+checkUpToDate:
+# File paths that you want to check for
+# In this example, it checks if the branch is up to date when alembic migrations are modified in the PR.
+# It helps avoid multiple heads in alembic migrations in a collaborative development project.
+  - airflow/migrations/*
+  - airflow/migrations/**/*
+  - airflow/alembic.ini
 ```
 
 ## Setup
