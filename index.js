@@ -2,6 +2,7 @@ const labeler = require('./lib/labeler')
 const greetings = require('./lib/greetings')
 const issuelink = require('./lib/issuelink')
 const titleValidator = require('./lib/title_validator')
+const upToDateChecker = require('./lib/up_to_date_checker')
 const utils = require('./lib/utils')
 
 module.exports = app => {
@@ -59,4 +60,13 @@ module.exports = app => {
     await titleValidator.verifyTitles(context, config)
   })
 
+  // "Up to date cheker" - Check if PR is up to date with master
+  app.on([
+    'pull_request.opened',
+    'pull_request.reopened',
+    'pull_request.edited',
+    'pull_request.synchronize'], async context => {
+    const config = await utils.getConfig(context)
+    await upToDateChecker.checkUpToDate(context, config)
+  })
 }
