@@ -28,6 +28,7 @@ This is helpful when you desire the changes to be applied sequentially, for exam
 3. It will start scanning for pull requests within few minutes.
 
 ```yaml
+##### Labeler ########################################################################################################## 
 # Enable "labeler" for your PR that would add labels to PRs based on the paths that are modified in the PR.
 labelPRBasedOnFilePath:
   # Add 'label1' to any changes within 'example' folder or any subfolders
@@ -47,6 +48,7 @@ labelPRBasedOnFilePath:
   test:
     - src/**/*.spec.js
 
+##### Greetings ########################################################################################################
 # Comment to be posted to welcome users when they open their first PR
 firstPRWelcomeComment: >
   Thanks for opening this pull request! Please check out our contributing guidelines.
@@ -59,6 +61,7 @@ firstPRMergeComment: >
 firstIssueWelcomeComment: >
   Thanks for opening your first issue here! Be sure to follow the issue template!
 
+###### IssueLink Adder #################################################################################################
 # Insert Issue (Jira/Github etc) link in PR description based on the Issue ID in PR title.
 insertIssueLinkInPrDescription:
    # specify the placeholder for the issue link that should be present in the description
@@ -77,6 +80,7 @@ insertIssueLinkInPrDescription:
       titleIssueIdRegexp: \[(AIRFLOW-X{4})\]
       descriptionIssueLink: "`Document only change, no JIRA issue`"
 
+###### Title Validator #################################################################################################
 # Verifies if commit/PR titles match the regexp specified
 verifyTitles:
   # Regular expression that should be matched by titles of commits or PR
@@ -90,6 +94,7 @@ verifyTitles:
   # If set to false it will check all commit messages. This is useful when you do not squash commits at merge.
   validateEitherPrOrSingleCommitTitle: true
 
+###### PR/Branch Up-To-Date Checker ####################################################################################
 # Check if the branch is up to date with master when certain files are modified
 checkUpToDate:
 # File paths that you want to check for
@@ -99,6 +104,8 @@ checkUpToDate:
   - airflow/migrations/**/*
   - airflow/alembic.ini
 ```
+
+All the features are optional. Simply add the config for the feature you want to use.
 
 ## Setup
 
