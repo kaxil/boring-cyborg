@@ -60,7 +60,7 @@ module.exports = app => {
     await titleValidator.verifyTitles(context, config)
   })
 
-  // "Up to date cheker" - Check if PR is up to date with master
+  // "Up to date checker" - Check if PR is up to date with master
   app.on([
     'pull_request.opened',
     'pull_request.reopened',
