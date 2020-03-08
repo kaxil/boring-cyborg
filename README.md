@@ -97,12 +97,15 @@ verifyTitles:
 ###### PR/Branch Up-To-Date Checker ####################################################################################
 # Check if the branch is up to date with master when certain files are modified
 checkUpToDate:
-# File paths that you want to check for
-# In this example, it checks if the branch is up to date when alembic migrations are modified in the PR.
-# It helps avoid multiple heads in alembic migrations in a collaborative development project.
-  - airflow/migrations/*
-  - airflow/migrations/**/*
-  - airflow/alembic.ini
+  # The default branch is "master", change the branch if you want to check against a different target branch  
+  targetBranch: master
+  files:
+  # File paths that you want to check for
+  # In this example, it checks if the branch is up to date when alembic migrations are modified in the PR.
+  # It helps avoid multiple heads in alembic migrations in a collaborative development project.
+    - airflow/migrations/*
+    - airflow/migrations/**/*
+    - airflow/alembic.ini
 ```
 
 All the features are optional. Simply add the config for the feature you want to use.
