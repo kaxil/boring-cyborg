@@ -85,6 +85,8 @@ insertIssueLinkInPrDescription:
 verifyTitles:
   # Regular expression that should be matched by titles of commits or PR
   titleRegexp: ^\[AIRFLOW-[0-9]{4}\].*$|^\[AIRFLOW-XXXX\].*$
+  # If set to true, it will always check the PR title (as opposed to the individual commits).
+  alwaysUsePrTitle: true
   # If set to true, it will only check the commit in case there is a single commit.
   # In case of multiple commits it will check PR title.
   # This reflects the standard behaviour of Github that for `Squash & Merge` GitHub
