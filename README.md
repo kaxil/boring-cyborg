@@ -85,10 +85,12 @@ insertIssueLinkInPrDescription:
 verifyTitles:
   # Regular expression that should be matched by titles of commits or PR
   titleRegexp: ^\[AIRFLOW-[0-9]{4}\].*$|^\[AIRFLOW-XXXX\].*$
+  # If set to true, it will only ever check the PR title (and validateEitherPrOrSingleCommitTitle is ignored).
+  onlyValidatePrTitle: false
   # If set to true, it will only check the commit in case there is a single commit.
   # In case of multiple commits it will check PR title.
   # This reflects the standard behaviour of Github that for `Squash & Merge` GitHub
-  # takes the title of the squashed commit from PR title rather than from commit message ¯\_(ツ)_/¯
+  # uses the PR title rather than commit messages for the squashed commit ¯\_(ツ)_/¯
   # For single-commit PRs it takes the squashed commit message from the commit as expected.
   #
   # If set to false it will check all commit messages. This is useful when you do not squash commits at merge.
