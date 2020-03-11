@@ -1,6 +1,6 @@
 # Boring Cyborg
 
-🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically label PRs, issues and 
+🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically label PRs, issues and
 performs all the boring operations that you don't want to do.
 
 ![Using Boring Cyborg Probot to add new labels](./assets/usage-screenshot-1.png)
@@ -18,7 +18,7 @@ performs all the boring operations that you don't want to do.
 automated comment.
 * Insert Issue (Jira/Github etc) link in PR description based on the Issue ID in PR title.
 * Verifies if commits/PR titles match the regular expression specified
-* Check if a branch is up to date with the master when specific files are modified in the PR. 
+* Check if a branch is up to date with the master when specific files are modified in the PR.
 This is helpful when you desire the changes to be applied sequentially, for example, alembic migrations.
 
 ## Usage
@@ -28,15 +28,15 @@ This is helpful when you desire the changes to be applied sequentially, for exam
 3. It will start scanning for pull requests within few minutes.
 
 ```yaml
-##### Labeler ########################################################################################################## 
+##### Labeler ##########################################################################################################
 # Enable "labeler" for your PR that would add labels to PRs based on the paths that are modified in the PR.
 labelPRBasedOnFilePath:
   # Add 'label1' to any changes within 'example' folder or any subfolders
   label1:
     - example/**/*
-  
+
   # Add 'label2' to any file changes within 'example2' folder
-  label2: 
+  label2:
     - example2/*
 
   # Complex: Add 'area/core' label to any change within the 'core' package
@@ -93,6 +93,15 @@ verifyTitles:
   #
   # If set to false it will check all commit messages. This is useful when you do not squash commits at merge.
   validateEitherPrOrSingleCommitTitle: true
+  # The title the GitHub status should appear from.
+  # Default: "Title Validator"
+  statusTitle: "Title"
+  # A custom message to be displayed when the title passes validation.
+  # Default: "Validation successful!""
+  successMessage: "Great title!"
+  # A custom message to be displayed when the title fails validation.
+  # Default: "Wrong commit/PR title: ${commitTitle}"
+  successMessage: "Title must begin with a Jira ticket!"
 
 ###### PR/Branch Up-To-Date Checker ####################################################################################
 # Check if the branch is up to date with master when certain files are modified
