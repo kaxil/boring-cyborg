@@ -1,6 +1,6 @@
 # Boring Cyborg
 
-🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically label PRs, issues and 
+🤖 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically label PRs, issues and
 performs all the boring operations that you don't want to do.
 
 ![Using Boring Cyborg Probot to add new labels](./assets/usage-screenshot-1.png)
@@ -18,7 +18,7 @@ performs all the boring operations that you don't want to do.
 automated comment.
 * Insert Issue (Jira/Github etc) link in PR description based on the Issue ID in PR title.
 * Verifies if commits/PR titles match the regular expression specified
-* Check if a branch is up to date with the master when specific files are modified in the PR. 
+* Check if a branch is up to date with the master when specific files are modified in the PR.
 This is helpful when you desire the changes to be applied sequentially, for example, alembic migrations.
 
 ## Usage
@@ -28,15 +28,15 @@ This is helpful when you desire the changes to be applied sequentially, for exam
 3. It will start scanning for pull requests within few minutes.
 
 ```yaml
-##### Labeler ########################################################################################################## 
+##### Labeler ##########################################################################################################
 # Enable "labeler" for your PR that would add labels to PRs based on the paths that are modified in the PR.
 labelPRBasedOnFilePath:
   # Add 'label1' to any changes within 'example' folder or any subfolders
   label1:
     - example/**/*
-  
+
   # Add 'label2' to any file changes within 'example2' folder
-  label2: 
+  label2:
     - example2/*
 
   # Complex: Add 'area/core' label to any change within the 'core' package
@@ -85,6 +85,8 @@ insertIssueLinkInPrDescription:
 verifyTitles:
   # Regular expression that should be matched by titles of commits or PR
   titleRegexp: ^\[AIRFLOW-[0-9]{4}\].*$|^\[AIRFLOW-XXXX\].*$
+  # If set to true, it will always check the PR title (as opposed to the individual commits).
+  alwaysUsePrTitle: true
   # If set to true, it will only check the commit in case there is a single commit.
   # In case of multiple commits it will check PR title.
   # This reflects the standard behaviour of Github that for `Squash & Merge` GitHub
