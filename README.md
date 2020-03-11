@@ -101,7 +101,7 @@ verifyTitles:
   successMessage: "Great title!"
   # A custom message to be displayed when the title fails validation.
   # Default: "Wrong commit/PR title: ${commitTitle}"
-  successMessage: "Title must begin with a Jira ticket!"
+  failureMessage: "Title must begin with a Jira ticket!"
 
 ###### PR/Branch Up-To-Date Checker ####################################################################################
 # Check if the branch is up to date with master when certain files are modified
