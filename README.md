@@ -95,6 +95,9 @@ verifyTitles:
   #
   # If set to false it will check all commit messages. This is useful when you do not squash commits at merge.
   validateEitherPrOrSingleCommitTitle: true
+  # Message to display to users when validation fails.
+  # Allows insertion of {type} (will be commit or PR), {title} (the title validated) and {regex} (the titleRegexp above).
+  errorDescription: "Wrong {type} title: {title}"
 
 ###### PR/Branch Up-To-Date Checker ####################################################################################
 # Check if the branch is up to date with master when certain files are modified
