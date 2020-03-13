@@ -101,7 +101,7 @@ verifyTitles:
   successMessage: "Validation successful!"
   # A custom message to be displayed when the title fails validation.
   # Allows insertion of ${type} (commit/PR), ${title} (the title validated) and ${regex} (the titleRegexp above).
-  failureMessage: "Wrong ${type} title: ${commitTitle}"
+  failureMessage: "Wrong ${type} title: ${title}"
 
 ###### PR/Branch Up-To-Date Checker ####################################################################################
 # Check if the branch is up to date with master when certain files are modified
