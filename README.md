@@ -90,20 +90,18 @@ verifyTitles:
   # If set to true, it will only check the commit in case there is a single commit.
   # In case of multiple commits it will check PR title.
   # This reflects the standard behaviour of Github that for `Squash & Merge` GitHub
-  # takes the title of the squashed commit from PR title rather than from commit message ¯\_(ツ)_/¯
+  # uses the PR title rather than commit messages for the squashed commit ¯\_(ツ)_/¯
   # For single-commit PRs it takes the squashed commit message from the commit as expected.
   #
   # If set to false it will check all commit messages. This is useful when you do not squash commits at merge.
   validateEitherPrOrSingleCommitTitle: true
   # The title the GitHub status should appear from.
-  # Default: "Title Validator"
-  statusTitle: "Title"
+  statusTitle: "Title Validator"
   # A custom message to be displayed when the title passes validation.
-  # Default: "Validation successful!""
-  successMessage: "Great title!"
+  successMessage: "Validation successful!"
   # A custom message to be displayed when the title fails validation.
-  # Default: "Wrong commit/PR title: ${commitTitle}"
-  failureMessage: "Title must begin with a Jira ticket!"
+  # Allows insertion of ${type} (commit/PR), ${title} (the title validated) and ${regex} (the titleRegexp above).
+  failureMessage: "Wrong ${type} title: ${commitTitle}"
 
 ###### PR/Branch Up-To-Date Checker ####################################################################################
 # Check if the branch is up to date with master when certain files are modified
