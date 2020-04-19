@@ -48,6 +48,13 @@ labelPRBasedOnFilePath:
   test:
     - src/**/*.spec.js
 
+# Various Flags to control behaviour of the "Labeler"
+labelerFlags:
+  # If this flag is changed to 'false', labels would only be added when the PR is first created and not when existing 
+  # PR is updated.
+  # The default is 'true' which means the labels would be added when PR is updated even if they were removed by the user   
+  labelOnPRUpdates: true
+
 ##### Greetings ########################################################################################################
 # Comment to be posted to welcome users when they open their first PR
 firstPRWelcomeComment: >
