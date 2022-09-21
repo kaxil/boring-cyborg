@@ -1,0 +1,13 @@
+addReviewerBasedOnLabel:
+  labels:
+    Docs:
+      - james-haytko-sp
+    IdentityNow:
+      - colin-mckibben-sp
+    Event Trigger Docs:
+      - james-haytko-sp
+      - colin-mckibben-sp
+reviewerFlags:
+  addReviewerBasedOnLabel: true
+  addDefaultReviewers: true
+  defaultReviewers: [tyler-mairose-sp, philip-ellis-sp]
