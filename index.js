@@ -1,5 +1,5 @@
 const labeler = require('./lib/labeler')
-const assigner = require('./lib/assigner')
+const reviewer = require('./lib/reviewer')
 const greetings = require('./lib/greetings')
 const issuelink = require('./lib/issuelink')
 const titleValidator = require('./lib/title_validator')
@@ -23,12 +23,12 @@ module.exports = app => {
     await labeler.addLabelsOnPr(context, config)
   })
 
-  // "Assigner" - Assign reviewers on PRs based on on label
+  // "Reviewer" - Assign reviewers on PRs based on on label
   app.on([
     'pull_request.labeled',
     'pull_request.unlabeled'], async context => {
       const config = await utils.getConfig(context)
-      await assigner.addReviewersOnPr(context, config)
+      await reviewer.addReviewersOnPr(context, config)
   })
 
   // "Greetings" - Welcome Authors on opening their first PR

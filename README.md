@@ -11,6 +11,8 @@ performs all the boring operations that you don't want to do.
 
 ![Verifies that PR title matches regexp (multiple commits)](./assets/usage-wrong-PR-title.png)
 
+![Add reviewers based on label](./assets/usage-add-reviewer-on-label.png)
+
 ## Features
 
 * Add labels based on the path of the file that are modified in the PR.
@@ -20,6 +22,7 @@ automated comment.
 * Verifies if commits/PR titles match the regular expression specified
 * Check if a branch is up to date with the master when specific files are modified in the PR.
 This is helpful when you desire the changes to be applied sequentially, for example, alembic migrations.
+* Add reviewers to PR based on labels present on the PR. This is especially helpful if you are auto-assigning labels based on functional areas of ownership.
 
 ## Usage
 
@@ -54,6 +57,19 @@ labelerFlags:
   # PR is updated.
   # The default is 'true' which means the labels would be added when PR is updated even if they were removed by the user   
   labelOnPRUpdates: true
+##### Reviewer #########################################################################################################
+# Enable "Reviewer" for your PR that would add reviewers to PRs based on the lables that exist on the PR. You have the option to set a default reviewer that gets added to every PR, or you can omit that config variable to skip it.
+addReviewerBasedOnLabel:
+  # add list of reviewers to add by default to all PRs
+  defaultReviewers:
+    - tyler-mairose-sp
+  # specify PR labels that you want to auto assign reviewers based on
+  labels:
+    lablel1:
+      - tyler-mairose-sp
+      - jordan-violet-sp
+    label2:
+      - kaxil
 
 ##### Greetings ########################################################################################################
 # Comment to be posted to welcome users when they open their first PR

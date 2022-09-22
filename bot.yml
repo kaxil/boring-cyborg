@@ -1,9 +1,0 @@
-labelPRBasedOnFilePath:
-  ReadMe:
-    - README.md
-addReviewerBasedOnLabel:
-  defaultReviewers:
-    - tyler-mairose-sp
-  labels:
-    ReadMe:
-      - jordan-violet-sp
