@@ -18,7 +18,9 @@
     "start": "probot run ./index.js",
     "lint": "standard --fix",
     "test": "jest && standard",
-    "test:watch": "jest --watch --notify --notifyMode=change --coverage"
+    "test:watch": "jest --watch --notify --notifyMode=change --coverage",
+    "request_labeled": "node_modules/.bin/probot receive -e pull_request -p test/pr.labeled.json index.js",
+    "request_unlabeled": "node_modules/.bin/probot receive -e pull_request -p test/pr.unlabeled.json ./index.js"
   },
   "dependencies": {
     "probot": "^9.8.1",
