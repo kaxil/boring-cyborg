@@ -41,16 +41,16 @@
       "merge_commit_sha": "ffb863bfbbaeddb92b5c9ebe5c32bcc2ed628ffe",
       "assignee": null,
       "assignees": [
-  
+
       ],
       "requested_reviewers": [
-  
+
       ],
       "requested_teams": [
-  
+
       ],
       "labels": [
-  
+
       ],
       "milestone": null,
       "draft": false,
@@ -176,7 +176,7 @@
           "is_template": false,
           "web_commit_signoff_required": false,
           "topics": [
-  
+
           ],
           "visibility": "public",
           "forks": 0,
@@ -313,7 +313,7 @@
           "is_template": false,
           "web_commit_signoff_required": false,
           "topics": [
-  
+
           ],
           "visibility": "public",
           "forks": 0,
@@ -477,7 +477,7 @@
       "is_template": false,
       "web_commit_signoff_required": false,
       "topics": [
-  
+
       ],
       "visibility": "public",
       "forks": 0,

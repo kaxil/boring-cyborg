@@ -45,7 +45,7 @@ labelPRBasedOnFilePath:
   # Complex: Add 'area/core' label to any change within the 'core' package
   area/core:
     - src/core/*
-    - src/core/**/*  
+    - src/core/**/*
 
   # Add 'test' label to any change to *.spec.js files within the source dir
   test:
@@ -53,9 +53,9 @@ labelPRBasedOnFilePath:
 
 # Various Flags to control behaviour of the "Labeler"
 labelerFlags:
-  # If this flag is changed to 'false', labels would only be added when the PR is first created and not when existing 
+  # If this flag is changed to 'false', labels would only be added when the PR is first created and not when existing
   # PR is updated.
-  # The default is 'true' which means the labels would be added when PR is updated even if they were removed by the user   
+  # The default is 'true' which means the labels would be added when PR is updated even if they were removed by the user
   labelOnPRUpdates: true
 
 ##### Reviewer #########################################################################################################
@@ -130,7 +130,7 @@ verifyTitles:
 ###### PR/Branch Up-To-Date Checker ####################################################################################
 # Check if the branch is up to date with master when certain files are modified
 checkUpToDate:
-  # The default branch is "master", change the branch if you want to check against a different target branch  
+  # The default branch is "master", change the branch if you want to check against a different target branch
   targetBranch: master
   files:
   # File paths that you want to check for
