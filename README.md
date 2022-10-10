@@ -57,6 +57,7 @@ labelerFlags:
   # PR is updated.
   # The default is 'true' which means the labels would be added when PR is updated even if they were removed by the user   
   labelOnPRUpdates: true
+
 ##### Reviewer #########################################################################################################
 # Enable "Reviewer" for your PR that would add reviewers to PRs based on the lables that exist on the PR. You have the option to set a default reviewer that gets added to every PR, or you can omit that config variable to skip it.
 addReviewerBasedOnLabel:
@@ -65,7 +66,7 @@ addReviewerBasedOnLabel:
     - tyler-mairose-sp
   # specify PR labels that you want to auto assign reviewers based on
   labels:
-    lablel1:
+    label1:
       - tyler-mairose-sp
       - jordan-violet-sp
     label2:

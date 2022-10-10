@@ -23,7 +23,7 @@ module.exports = app => {
     await labeler.addLabelsOnPr(context, config)
   })
 
-  // "Reviewer" - Assign reviewers on PRs based on on label
+  // "Reviewer" - Assign reviewers on PRs based on label
   app.on([
     'pull_request.labeled',
     'pull_request.unlabeled'], async context => {
