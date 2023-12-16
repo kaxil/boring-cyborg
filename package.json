@@ -23,7 +23,7 @@
     "request_unlabeled": "node_modules/.bin/probot receive -e pull_request -p test/pr.unlabeled.json ./index.js"
   },
   "dependencies": {
-    "probot": "^12.2.8",
+    "probot": "^12.3.3",
     "ignore": "^5.1.4"
   },
   "devDependencies": {
