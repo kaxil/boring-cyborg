@@ -2,7 +2,7 @@
 ci:
   skip:
     - identity  # output is too verbose for ci; pre-commit.ci truncates almost all output after that
-default_stages: [Nonepre-commitNone, Nonepre-pushNone]
+default_stages: [commit, push]
 minimum_pre_commit_version: "1.20.0"
 repos:
   - repo: meta
