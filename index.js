@@ -9,7 +9,7 @@ const utils = require('./lib/utils')
 module.exports = (app, { getRouter }) => {
   app.log.info('Yay, the app was loaded!')
 
-  app.on('*', async context => {
+  app.onAny(async context => {
     context.log.info({ event: context.event, action: context.payload.action })
   })
 
