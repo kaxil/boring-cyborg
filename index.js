@@ -82,4 +82,30 @@ module.exports = (app, { getRouter }) => {
     const config = await utils.getConfig(context)
     await upToDateChecker.checkUpToDate(context, config)
   })
+
+  // Only register the /stats endpoint if getRouter is provided and returns a router
+  if (typeof getRouter === 'function') {
+    const router = getRouter('/boring-cyborg')
+    if (router && typeof router.get === 'function') {
+      router.get('/stats', async (req, res) => {
+        try {
+          // Use the app's authenticated octokit instance
+          const octokit = await app.auth()
+          const installations = await octokit.paginate(octokit.rest.apps.listInstallations)
+          const stats = {
+            totalInstallations: installations.length,
+            installations: installations.map(inst => ({
+              id: inst.id,
+              account: inst.account.login,
+              account_type: inst.account.type
+            }))
+          }
+          res.json(stats)
+        } catch (err) {
+          app.log.error('Error fetching stats:', err)
+          res.status(500).json({ error: 'Failed to fetch stats' })
+        }
+      })
+    }
+  }
 }
