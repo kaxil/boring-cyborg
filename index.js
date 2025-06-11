@@ -10,7 +10,11 @@ module.exports = (app, { getRouter }) => {
   app.log.info('Yay, the app was loaded!')
 
   app.onAny(async context => {
-    context.log.info({ event: context.event, action: context.payload.action })
+    // Only log events we care about to reduce noise
+    const relevantEvents = ['pull_request', 'issues', 'push']
+    if (relevantEvents.includes(context.event)) {
+      context.log.info(`${context.event}.${context.payload.action || 'unknown'}`)
+    }
   })
 
   // "Labeler" - Add Labels on PRs

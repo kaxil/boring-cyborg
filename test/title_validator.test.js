@@ -15,8 +15,10 @@ describe('title_validator', () => {
           get: jest.fn(),
           listCommits: jest.fn()
         },
-        repos: {
-          createStatus: jest.fn()
+        rest: {
+          repos: {
+            createCommitStatus: jest.fn()
+          }
         }
       },
       issue: jest.fn(() => ({ owner: 'owner', repo: 'repo', pull_number: 1 })),
@@ -49,7 +51,7 @@ describe('title_validator', () => {
 
       await verifyTitles(context, config)
 
-      expect(context.octokit.repos.createStatus).toHaveBeenCalledWith({
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         sha: 'abc123',
@@ -84,7 +86,7 @@ describe('title_validator', () => {
 
       await verifyTitles(context, config)
 
-      expect(context.octokit.repos.createStatus).toHaveBeenCalledWith({
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         sha: 'abc123',
@@ -120,7 +122,7 @@ describe('title_validator', () => {
 
       await verifyTitles(context, config)
 
-      expect(context.octokit.repos.createStatus).toHaveBeenCalledWith({
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         sha: 'abc123',
@@ -157,7 +159,7 @@ describe('title_validator', () => {
 
       await verifyTitles(context, config)
 
-      expect(context.octokit.repos.createStatus).toHaveBeenCalledWith({
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         sha: 'abc123',
@@ -190,7 +192,7 @@ describe('title_validator', () => {
 
       await verifyTitles(context, config)
 
-      expect(context.octokit.repos.createStatus).toHaveBeenCalledWith({
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         sha: 'abc123',
@@ -206,7 +208,7 @@ describe('title_validator', () => {
       await verifyTitles(context, config)
 
       expect(context.octokit.pulls.get).not.toHaveBeenCalled()
-      expect(context.octokit.repos.createStatus).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.createCommitStatus).not.toHaveBeenCalled()
     })
   })
 })
