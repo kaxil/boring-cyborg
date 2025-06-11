@@ -23,18 +23,18 @@
     "request_unlabeled": "node_modules/.bin/probot receive -e pull_request -p test/pr.unlabeled.json ./index.js"
   },
   "dependencies": {
-    "probot": "^13.4.3",
-    "ignore": "^5.1.4"
+    "probot": "^13.4.5",
+    "ignore": "^7.0.5"
   },
   "devDependencies": {
-    "jest": "^29.1.2",
-    "nock": "^11.4.0",
-    "nodemon": "^2.0.20",
-    "smee-client": "^2.0.1",
-    "standard": "^14.3.1"
+    "jest": "^30.0.0",
+    "nock": "^14.0.5",
+    "nodemon": "^3.1.10",
+    "smee-client": "^4.2.1",
+    "standard": "^17.1.2"
   },
   "engines": {
-    "node": ">= 8.3.0"
+    "node": ">= 18.0.0"
   },
   "standard": {
     "env": [
@@ -49,6 +49,7 @@
     ]
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/test/setup.js"]
   }
 }

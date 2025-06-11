@@ -27,8 +27,8 @@ module.exports = app => {
   app.on([
     'pull_request.labeled',
     'pull_request.unlabeled'], async context => {
-      const config = await utils.getConfig(context)
-      await reviewer.addReviewersOnPr(context, config)
+    const config = await utils.getConfig(context)
+    await reviewer.addReviewersOnPr(context, config)
   })
 
   // "Greetings" - Welcome Authors on opening their first PR
