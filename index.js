@@ -6,11 +6,11 @@ const titleValidator = require('./lib/title_validator')
 const upToDateChecker = require('./lib/up_to_date_checker')
 const utils = require('./lib/utils')
 
-module.exports = app => {
-  app.log('Yay, the app was loaded!')
+module.exports = (app, { getRouter }) => {
+  app.log.info('Yay, the app was loaded!')
 
   app.on('*', async context => {
-    context.log({ event: context.event, action: context.payload.action })
+    context.log.info({ event: context.event, action: context.payload.action })
   })
 
   // "Labeler" - Add Labels on PRs
