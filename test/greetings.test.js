@@ -10,7 +10,9 @@ describe('greetings', () => {
           user: { login: 'testuser' },
           number: 1,
           html_url: 'https://github.com/owner/repo/pull/1',
-          merged: false
+          merged: false,
+          created_at: '2024-01-01T00:00:00Z',
+          merged_at: '2024-01-02T00:00:00Z'
         },
         repository: {
           full_name: 'owner/repo'
@@ -18,7 +20,8 @@ describe('greetings', () => {
         issue: {
           user: { login: 'testuser' },
           number: 1,
-          html_url: 'https://github.com/owner/repo/issues/1'
+          html_url: 'https://github.com/owner/repo/issues/1',
+          created_at: '2024-01-01T00:00:00Z'
         }
       },
       log: {
@@ -50,7 +53,7 @@ describe('greetings', () => {
       }
 
       context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:pr author:testuser repo:owner/repo'
+        q: 'is:pr author:testuser repo:owner/repo created:<2024-01-01T00:00:00Z'
       })
       context.octokit.paginate.mockImplementation((endpoint, callback) => {
         // No callback means no existing PRs, so Set remains empty
@@ -75,7 +78,7 @@ describe('greetings', () => {
       }
 
       context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:pr author:testuser repo:owner/repo'
+        q: 'is:pr author:testuser repo:owner/repo created:<2024-01-01T00:00:00Z'
       })
       context.octokit.paginate.mockImplementation((endpoint, callback) => {
         if (callback) {
@@ -108,7 +111,7 @@ describe('greetings', () => {
 
       context.payload.pull_request.merged = true
       context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:pr is:merged author:testuser repo:owner/repo'
+        q: 'is:pr is:merged author:testuser repo:owner/repo merged:<2024-01-02T00:00:00Z'
       })
       context.octokit.paginate.mockImplementation((endpoint, callback) => {
         // No callback means no existing PRs, so Set remains empty
@@ -148,7 +151,7 @@ describe('greetings', () => {
       }
 
       context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:issue author:testuser repo:owner/repo'
+        q: 'is:issue author:testuser repo:owner/repo created:<2024-01-01T00:00:00Z'
       })
       context.octokit.paginate.mockImplementation((endpoint, callback) => {
         // No callback means no existing issues, so Set remains empty
@@ -173,7 +176,7 @@ describe('greetings', () => {
       }
 
       context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:issue author:testuser repo:owner/repo'
+        q: 'is:issue author:testuser repo:owner/repo created:<2024-01-01T00:00:00Z'
       })
       context.octokit.paginate.mockImplementation((endpoint, callback) => {
         if (callback) {
