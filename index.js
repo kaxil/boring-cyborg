@@ -89,6 +89,23 @@ module.exports = (app, { getRouter }) => {
     if (router && typeof router.get === 'function') {
       router.get('/stats', async (req, res) => {
         try {
+          // Check for STATS_API_KEY authentication
+          const authHeader = req.headers.authorization
+          const statsApiKey = process.env.STATS_API_KEY
+
+          if (!statsApiKey) {
+            return res.status(500).json({ error: 'STATS_API_KEY not configured' })
+          }
+
+          if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Missing or invalid Authorization header' })
+          }
+
+          const providedKey = authHeader.substring(7) // Remove 'Bearer ' prefix
+          if (providedKey !== statsApiKey) {
+            return res.status(403).json({ error: 'Invalid API key' })
+          }
+
           // Use the app's authenticated octokit instance
           const octokit = await app.auth()
           const installations = await octokit.paginate(octokit.rest.apps.listInstallations)
