@@ -30,16 +30,13 @@ describe('greetings', () => {
         warn: jest.fn()
       },
       octokit: {
-        paginate: jest.fn(),
+        rest: {
+          search: {
+            issuesAndPullRequests: jest.fn()
+          }
+        },
         issues: {
           createComment: jest.fn()
-        },
-        search: {
-          issuesAndPullRequests: {
-            endpoint: {
-              merge: jest.fn()
-            }
-          }
         }
       },
       issue: jest.fn((obj = {}) => ({ owner: 'owner', repo: 'repo', issue_number: 1, ...obj }))
@@ -52,12 +49,11 @@ describe('greetings', () => {
         firstPRWelcomeComment: 'Welcome to your first PR!'
       }
 
-      context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:pr author:testuser repo:owner/repo created:<2024-01-01T00:00:00Z'
-      })
-      context.octokit.paginate.mockImplementation((endpoint, callback) => {
-        // No callback means no existing PRs, so Set remains empty
-        return Promise.resolve()
+      context.octokit.rest.search.issuesAndPullRequests.mockResolvedValue({
+        data: {
+          total_count: 0,
+          items: []
+        }
       })
 
       await commentOnfirstPR(context, config)
@@ -77,15 +73,11 @@ describe('greetings', () => {
         firstPRWelcomeComment: 'Welcome to your first PR!'
       }
 
-      context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:pr author:testuser repo:owner/repo created:<2024-01-01T00:00:00Z'
-      })
-      context.octokit.paginate.mockImplementation((endpoint, callback) => {
-        if (callback) {
-          const res = { data: { items: [{ number: 2 }] } }
-          callback(res)
+      context.octokit.rest.search.issuesAndPullRequests.mockResolvedValue({
+        data: {
+          total_count: 1,
+          items: [{ number: 2 }]
         }
-        return Promise.resolve()
       })
 
       await commentOnfirstPR(context, config)
@@ -98,7 +90,7 @@ describe('greetings', () => {
 
       await commentOnfirstPR(context, config)
 
-      expect(context.octokit.paginate).not.toHaveBeenCalled()
+      expect(context.octokit.rest.search.issuesAndPullRequests).not.toHaveBeenCalled()
       expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
     })
   })
@@ -110,12 +102,11 @@ describe('greetings', () => {
       }
 
       context.payload.pull_request.merged = true
-      context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:pr is:merged author:testuser repo:owner/repo merged:<2024-01-02T00:00:00Z'
-      })
-      context.octokit.paginate.mockImplementation((endpoint, callback) => {
-        // No callback means no existing PRs, so Set remains empty
-        return Promise.resolve()
+      context.octokit.rest.search.issuesAndPullRequests.mockResolvedValue({
+        data: {
+          total_count: 0,
+          items: []
+        }
       })
 
       await commentOnfirstPRMerge(context, config)
@@ -139,7 +130,7 @@ describe('greetings', () => {
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.paginate).not.toHaveBeenCalled()
+      expect(context.octokit.rest.search.issuesAndPullRequests).not.toHaveBeenCalled()
       expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
     })
   })
@@ -150,12 +141,11 @@ describe('greetings', () => {
         firstIssueWelcomeComment: 'Welcome to your first issue!'
       }
 
-      context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:issue author:testuser repo:owner/repo created:<2024-01-01T00:00:00Z'
-      })
-      context.octokit.paginate.mockImplementation((endpoint, callback) => {
-        // No callback means no existing issues, so Set remains empty
-        return Promise.resolve()
+      context.octokit.rest.search.issuesAndPullRequests.mockResolvedValue({
+        data: {
+          total_count: 0,
+          items: []
+        }
       })
 
       await commentOnfirstIssue(context, config)
@@ -175,15 +165,11 @@ describe('greetings', () => {
         firstIssueWelcomeComment: 'Welcome to your first issue!'
       }
 
-      context.octokit.search.issuesAndPullRequests.endpoint.merge.mockReturnValue({
-        q: 'is:issue author:testuser repo:owner/repo created:<2024-01-01T00:00:00Z'
-      })
-      context.octokit.paginate.mockImplementation((endpoint, callback) => {
-        if (callback) {
-          const res = { data: { items: [{ number: 2 }] } }
-          callback(res)
+      context.octokit.rest.search.issuesAndPullRequests.mockResolvedValue({
+        data: {
+          total_count: 1,
+          items: [{ number: 2 }]
         }
-        return Promise.resolve()
       })
 
       await commentOnfirstIssue(context, config)
