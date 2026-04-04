@@ -4,6 +4,7 @@ const greetings = require('./lib/greetings')
 const issuelink = require('./lib/issuelink')
 const titleValidator = require('./lib/title_validator')
 const upToDateChecker = require('./lib/up_to_date_checker')
+const initialPr = require('./lib/initial_pr')
 const utils = require('./lib/utils')
 
 module.exports = (app, { getRouter }) => {
@@ -81,6 +82,21 @@ module.exports = (app, { getRouter }) => {
     'pull_request.synchronize'], async context => {
     const config = await utils.getConfig(context)
     await upToDateChecker.checkUpToDate(context, config)
+  })
+
+  // "Initial PR" - Create an initial PR from a fork to establish boring-cyborg
+  // as a recognized contributor, so its workflow runs don't require manual approval.
+  // Triggered on PR open (piggybacks on existing events) and on installation
+  // created/updated events (covers new installs and app upgrades).
+  app.on('pull_request.opened', async context => {
+    await initialPr.createInitialPR(context)
+  })
+
+  app.on([
+    'installation.created',
+    'installation.new_permissions_accepted',
+    'installation_repositories.added'], async context => {
+    await initialPr.createInitialPROnInstall(context)
   })
 
   // Only register the /stats endpoint if getRouter is provided and returns a router

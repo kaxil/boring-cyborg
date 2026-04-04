@@ -23,6 +23,8 @@ default_events:
   # - fork
   # - gollum
   # - issue_comment
+  - installation
+  - installation_repositories
   - issues
   - label
   # - milestone
@@ -62,7 +64,8 @@ default_permissions:
 
   # Repository contents, commits, branches, downloads, releases, and merges.
   # https://developer.github.com/v3/apps/permissions/#permission-on-contents
-  # contents: read
+  # Required for forking repos to create initial PRs and reading config files.
+  contents: read
 
   # Deployments and deployment statuses.
   # https://developer.github.com/v3/apps/permissions/#permission-on-deployments

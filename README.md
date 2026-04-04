@@ -23,6 +23,8 @@ automated comment.
 * Check if a branch is up to date with the master when specific files are modified in the PR.
 This is helpful when you desire the changes to be applied sequentially, for example, alembic migrations.
 * Add reviewers to PR based on labels present on the PR. This is especially helpful if you are auto-assigning labels based on functional areas of ownership.
+* Automatically establish `boring-cyborg[bot]` as a recognised contributor so its workflow runs
+no longer require manual approval (see [Recognised Contributor PR](#recognised-contributor-pr) below).
 
 ## Usage
 
@@ -142,6 +144,49 @@ checkUpToDate:
 ```
 
 All the features are optional. Simply add the config for the feature you want to use.
+
+###### Recognised Contributor PR #######################################################################################
+
+GitHub requires manual approval for workflow runs triggered by first-time contributors. This means
+that when boring-cyborg is first installed (or upgraded), any workflows it triggers may need a
+maintainer to click "Approve" before they run.
+
+To solve this automatically, boring-cyborg can create a one-time PR from a fork that adds a
+`boringCyborgAsRecognisedContributor: true` flag to your `.github/boring-cyborg.yml`. Once you
+merge that PR, GitHub recognises `boring-cyborg[bot]` as a past contributor and stops requiring
+manual approval for its workflow runs.
+
+**How it works:**
+
+1. On certain events (PR opened, app installed, app upgraded, repos added to installation),
+   boring-cyborg reads your `.github/boring-cyborg.yml`.
+2. If `boringCyborgAsRecognisedContributor: true` is already present, it does nothing.
+3. If the flag is missing or set to `false`, and boring-cyborg has no existing PRs in the repo,
+   it forks the repo, adds the flag, and opens a cross-fork PR.
+4. A maintainer reviews and merges the PR — boring-cyborg is now a recognised contributor.
+
+**To opt in** (for repos where boring-cyborg is already installed), add the flag set to `false`
+in your `.github/boring-cyborg.yml`:
+
+```yaml
+# Set to false to request boring-cyborg to create a PR that establishes it
+# as a recognised contributor (so its workflow runs don't need manual approval).
+# Once the PR is merged, the flag will be set to true automatically.
+boringCyborgAsRecognisedContributor: false
+```
+
+**To skip** (if you don't need this), add the flag set to `true`:
+
+```yaml
+# boring-cyborg is already a recognised contributor — no initial PR needed.
+boringCyborgAsRecognisedContributor: true
+```
+
+If the flag is absent entirely, boring-cyborg will also attempt to create the PR (since the
+contributor status has not been established yet).
+
+> **Note:** This feature uses a fork-based approach and only requires `contents: read` permission
+> on your repository — it does **not** need `contents: write`.
 
 ## Setup
 
