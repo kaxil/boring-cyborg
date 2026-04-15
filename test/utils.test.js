@@ -73,8 +73,8 @@ describe('utils', () => {
       expect(ctx.log.warn).toHaveBeenCalled()
     })
 
-    it('filters out all PRs when filter is an empty array', () => {
-      expect(utils.shouldProcessPr(makeContext('main'), { targetBranchFilter: [] })).toBe(false)
+    it('treats an empty array filter as unset (processes all PRs)', () => {
+      expect(utils.shouldProcessPr(makeContext('main'), { targetBranchFilter: [] })).toBe(true)
     })
 
     it('returns true when filter value is empty string (treated as unset)', () => {

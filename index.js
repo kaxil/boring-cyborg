@@ -17,39 +17,33 @@ module.exports = (app, { getRouter }) => {
     }
   })
 
-  // "Labeler" - Add Labels on PRs
-  app.on([
+  const withBranchFilter = (handler) => async (context) => {
+    const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
+    await handler(context, config)
+  }
+
+  const prEditEvents = [
     'pull_request.opened',
     'pull_request.reopened',
     'pull_request.edited',
-    'pull_request.synchronize'], async context => {
-    const config = await utils.getConfig(context)
-    if (!utils.shouldProcessPr(context, config)) return
-    await labeler.addLabelsOnPr(context, config)
-  })
+    'pull_request.synchronize'
+  ]
+
+  // "Labeler" - Add Labels on PRs
+  app.on(prEditEvents, withBranchFilter((ctx, config) => labeler.addLabelsOnPr(ctx, config)))
 
   // "Reviewer" - Assign reviewers on PRs based on label
   app.on([
     'pull_request.labeled',
-    'pull_request.unlabeled'], async context => {
-    const config = await utils.getConfig(context)
-    if (!utils.shouldProcessPr(context, config)) return
-    await reviewer.addReviewersOnPr(context, config)
-  })
+    'pull_request.unlabeled'
+  ], withBranchFilter((ctx, config) => reviewer.addReviewersOnPr(ctx, config)))
 
   // "Greetings" - Welcome Authors on opening their first PR
-  app.on('pull_request.opened', async context => {
-    const config = await utils.getConfig(context)
-    if (!utils.shouldProcessPr(context, config)) return
-    await greetings.commentOnfirstPR(context, config)
-  })
+  app.on('pull_request.opened', withBranchFilter((ctx, config) => greetings.commentOnfirstPR(ctx, config)))
 
   // "Greetings" - Congratulate Authors on getting their first PR merged
-  app.on('pull_request.closed', async context => {
-    const config = await utils.getConfig(context)
-    if (!utils.shouldProcessPr(context, config)) return
-    await greetings.commentOnfirstPRMerge(context, config)
-  })
+  app.on('pull_request.closed', withBranchFilter((ctx, config) => greetings.commentOnfirstPRMerge(ctx, config)))
 
   // "Greetings" - Welcome Authors on opening their first Issue
   app.on('issues.opened', async context => {
@@ -58,37 +52,13 @@ module.exports = (app, { getRouter }) => {
   })
 
   // "IssueLink" - Update issue links in PRs
-  app.on([
-    'pull_request.opened',
-    'pull_request.reopened',
-    'pull_request.edited',
-    'pull_request.synchronize'], async context => {
-    const config = await utils.getConfig(context)
-    if (!utils.shouldProcessPr(context, config)) return
-    await issuelink.insertIssueLinkInPrDescription(context, config)
-  })
+  app.on(prEditEvents, withBranchFilter((ctx, config) => issuelink.insertIssueLinkInPrDescription(ctx, config)))
 
   // "Commit Validator" - validate commit messages for regular expression
-  app.on([
-    'pull_request.opened',
-    'pull_request.reopened',
-    'pull_request.edited',
-    'pull_request.synchronize'], async context => {
-    const config = await utils.getConfig(context)
-    if (!utils.shouldProcessPr(context, config)) return
-    await titleValidator.verifyTitles(context, config)
-  })
+  app.on(prEditEvents, withBranchFilter((ctx, config) => titleValidator.verifyTitles(ctx, config)))
 
   // "Up to date checker" - Check if PR is up to date with master
-  app.on([
-    'pull_request.opened',
-    'pull_request.reopened',
-    'pull_request.edited',
-    'pull_request.synchronize'], async context => {
-    const config = await utils.getConfig(context)
-    if (!utils.shouldProcessPr(context, config)) return
-    await upToDateChecker.checkUpToDate(context, config)
-  })
+  app.on(prEditEvents, withBranchFilter((ctx, config) => upToDateChecker.checkUpToDate(ctx, config)))
 
   // Only register the /stats endpoint if getRouter is provided and returns a router
   if (typeof getRouter === 'function') {
