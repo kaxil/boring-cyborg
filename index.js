@@ -24,6 +24,7 @@ module.exports = (app, { getRouter }) => {
     'pull_request.edited',
     'pull_request.synchronize'], async context => {
     const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
     await labeler.addLabelsOnPr(context, config)
   })
 
@@ -32,18 +33,21 @@ module.exports = (app, { getRouter }) => {
     'pull_request.labeled',
     'pull_request.unlabeled'], async context => {
     const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
     await reviewer.addReviewersOnPr(context, config)
   })
 
   // "Greetings" - Welcome Authors on opening their first PR
   app.on('pull_request.opened', async context => {
     const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
     await greetings.commentOnfirstPR(context, config)
   })
 
   // "Greetings" - Congratulate Authors on getting their first PR merged
   app.on('pull_request.closed', async context => {
     const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
     await greetings.commentOnfirstPRMerge(context, config)
   })
 
@@ -60,6 +64,7 @@ module.exports = (app, { getRouter }) => {
     'pull_request.edited',
     'pull_request.synchronize'], async context => {
     const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
     await issuelink.insertIssueLinkInPrDescription(context, config)
   })
 
@@ -70,6 +75,7 @@ module.exports = (app, { getRouter }) => {
     'pull_request.edited',
     'pull_request.synchronize'], async context => {
     const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
     await titleValidator.verifyTitles(context, config)
   })
 
@@ -80,6 +86,7 @@ module.exports = (app, { getRouter }) => {
     'pull_request.edited',
     'pull_request.synchronize'], async context => {
     const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
     await upToDateChecker.checkUpToDate(context, config)
   })
 

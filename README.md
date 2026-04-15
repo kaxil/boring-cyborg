@@ -31,6 +31,17 @@ This is helpful when you desire the changes to be applied sequentially, for exam
 3. It will start scanning for pull requests within few minutes.
 
 ```yaml
+##### Target branch filter ############################################################################################
+# Optional. If set, the bot will only act on pull requests whose base (target) branch matches
+# at least one of the regex patterns below. Pull requests targeting any other branch are ignored
+# by all PR-related features (labeler, reviewer, title validator, issue link, up-to-date checker,
+# PR greetings). Events that are not pull requests (e.g. new issues) are not affected.
+#
+# Accepts either a single regex string or a list of regex strings.
+targetBranchFilter:
+  - ^main$
+  - ^release/.*$
+
 ##### Labeler ##########################################################################################################
 # Enable "labeler" for your PR that would add labels to PRs based on the paths that are modified in the PR.
 labelPRBasedOnFilePath:
