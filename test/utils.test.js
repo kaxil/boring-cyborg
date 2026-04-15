@@ -80,5 +80,17 @@ describe('utils', () => {
     it('returns true when filter value is empty string (treated as unset)', () => {
       expect(utils.shouldProcessPr(makeContext('main'), { targetBranchFilter: '' })).toBe(true)
     })
+
+    it('returns true when config is null or undefined', () => {
+      expect(utils.shouldProcessPr(makeContext('main'), null)).toBe(true)
+      expect(utils.shouldProcessPr(makeContext('main'), undefined)).toBe(true)
+    })
+
+    it('rejects unsafe regex patterns and logs a warning', () => {
+      const ctx = makeContext('main')
+      const config = { targetBranchFilter: ['^(a+)+$'] }
+      expect(utils.shouldProcessPr(ctx, config)).toBe(false)
+      expect(ctx.log.warn).toHaveBeenCalled()
+    })
   })
 })

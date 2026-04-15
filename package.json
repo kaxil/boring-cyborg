@@ -23,8 +23,9 @@
     "request_unlabeled": "node_modules/.bin/probot receive -e pull_request -p test/pr.unlabeled.json ./index.js"
   },
   "dependencies": {
+    "ignore": "^7.0.5",
     "probot": "^13.4.5",
-    "ignore": "^7.0.5"
+    "safe-regex2": "^5.1.0"
   },
   "devDependencies": {
     "jest": "^30.0.0",
@@ -50,6 +51,8 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "setupFilesAfterEnv": ["<rootDir>/test/setup.js"]
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/setup.js"
+    ]
   }
 }

@@ -38,6 +38,9 @@ This is helpful when you desire the changes to be applied sequentially, for exam
 # PR greetings). Events that are not pull requests (e.g. new issues) are not affected.
 #
 # Accepts either a single regex string or a list of regex strings.
+# Patterns are matched as regular expressions. Use ^ and $ anchors for exact
+# branch name matching (e.g. ^main$ instead of just main, which would also
+# match branches like "my-maintainer-branch").
 targetBranchFilter:
   - ^main$
   - ^release/.*$
