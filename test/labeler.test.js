@@ -1,34 +1,11 @@
 const { addLabelsOnPr } = require('../lib/labeler')
+const { createMockContext } = require('./helpers')
 
 describe('labeler', () => {
   let context
 
   beforeEach(() => {
-    context = {
-      event: 'pull_request',
-      payload: {
-        action: 'opened',
-        pull_request: {
-          number: 1,
-          base: { ref: 'main' }
-        }
-      },
-      log: {
-        info: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn()
-      },
-      octokit: {
-        pulls: {
-          get: jest.fn(),
-          listFiles: jest.fn()
-        },
-        issues: {
-          addLabels: jest.fn()
-        }
-      },
-      issue: jest.fn((params) => ({ owner: 'owner', repo: 'repo', pull_number: 1, ...params }))
-    }
+    context = createMockContext()
   })
 
   describe('addLabelsOnPr', () => {
@@ -59,7 +36,7 @@ describe('labeler', () => {
       expect(context.octokit.issues.addLabels).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
-        pull_number: 1,
+        issue_number: 1,
         labels: ['frontend']
       })
     })
@@ -125,6 +102,39 @@ describe('labeler', () => {
       expect(context.octokit.issues.addLabels).not.toHaveBeenCalled()
     })
 
+    it('should match non-trivial glob patterns correctly', async () => {
+      const config = {
+        labelPRBasedOnFilePath: {
+          migrations: ['db/migrations/**/*.sql'],
+          tests: ['**/__tests__/**', '**/*.test.js'],
+          config: ['*.json', '*.yml', '!package-lock.json']
+        }
+      }
+
+      context.octokit.pulls.get.mockResolvedValue({
+        data: {
+          url: 'https://api.github.com/repos/owner/repo/pulls/1',
+          labels: []
+        }
+      })
+
+      context.octokit.pulls.listFiles.mockResolvedValue({
+        data: [
+          { filename: 'db/migrations/2024/001_add_users.sql' },
+          { filename: 'src/__tests__/app.test.js' },
+          { filename: 'tsconfig.json' }
+        ]
+      })
+
+      await addLabelsOnPr(context, config)
+
+      expect(context.octokit.issues.addLabels).toHaveBeenCalledWith(
+        expect.objectContaining({
+          labels: expect.arrayContaining(['migrations', 'tests', 'config'])
+        })
+      )
+    })
+
     it('should skip labeling on PR updates when disabled', async () => {
       const config = {
         labelPRBasedOnFilePath: {
@@ -168,7 +178,7 @@ describe('labeler', () => {
       expect(context.octokit.issues.addLabels).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
-        pull_number: 1,
+        issue_number: 1,
         labels: ['frontend']
       })
     })
@@ -202,7 +212,7 @@ describe('labeler', () => {
       expect(context.octokit.issues.addLabels).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
-        pull_number: 1,
+        issue_number: 1,
         labels: ['backend']
       })
     })
