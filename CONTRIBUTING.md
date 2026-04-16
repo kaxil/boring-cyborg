@@ -34,6 +34,18 @@ Here are a few things you can do that will increase the likelihood of your pull 
 
 Work in Progress pull requests are also welcome to get feedback early on, or if there is something blocked you.
 
+## Releases and Deployment
+
+This project uses [CalVer](https://calver.org/) with the format `YYYY.MM.DD` (e.g., `2026.04.16`). For multiple releases on the same day, append a counter: `2026.04.16.1`.
+
+Creating a GitHub release triggers the deploy pipeline, which runs tests and deploys to Heroku automatically.
+
+To create a release:
+
+```bash
+gh release create 2026.04.16 --title "2026.04.16" --generate-notes
+```
+
 ## Resources
 
 - [How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)
