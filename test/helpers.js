@@ -56,6 +56,7 @@ function createMockContext (overrides = {}) {
       warn: jest.fn()
     },
     octokit: {
+      paginate: jest.fn(),
       pulls: {
         get: jest.fn(),
         listFiles: jest.fn(),
