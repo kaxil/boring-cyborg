@@ -93,4 +93,48 @@ describe('utils', () => {
       expect(ctx.log.warn).toHaveBeenCalled()
     })
   })
+
+  describe('matchesBranchFilter', () => {
+    it('returns true for an unset filter (undefined/null/empty)', () => {
+      const ctx = makeContext('main')
+      expect(utils.matchesBranchFilter(ctx, undefined)).toBe(true)
+      expect(utils.matchesBranchFilter(ctx, null)).toBe(true)
+      expect(utils.matchesBranchFilter(ctx, '')).toBe(true)
+      expect(utils.matchesBranchFilter(ctx, [])).toBe(true)
+    })
+
+    it('returns true when payload has no pull_request', () => {
+      expect(utils.matchesBranchFilter(makeContext(undefined), '^main$')).toBe(true)
+    })
+
+    it('matches against a single string pattern', () => {
+      expect(utils.matchesBranchFilter(makeContext('main'), '^main$')).toBe(true)
+      expect(utils.matchesBranchFilter(makeContext('dev'), '^main$')).toBe(false)
+    })
+
+    it('matches against an array (any-match passes)', () => {
+      const filter = ['^main$', '^release/.*$']
+      expect(utils.matchesBranchFilter(makeContext('main'), filter)).toBe(true)
+      expect(utils.matchesBranchFilter(makeContext('release/1.2'), filter)).toBe(true)
+      expect(utils.matchesBranchFilter(makeContext('feature/x'), filter)).toBe(false)
+    })
+
+    it('skips invalid regex patterns and logs a warning', () => {
+      const ctx = makeContext('main')
+      expect(utils.matchesBranchFilter(ctx, ['[unclosed'])).toBe(false)
+      expect(ctx.log.warn).toHaveBeenCalled()
+    })
+
+    it('skips unsafe regex patterns and logs a warning', () => {
+      const ctx = makeContext('main')
+      expect(utils.matchesBranchFilter(ctx, ['^(a+)+$'])).toBe(false)
+      expect(ctx.log.warn).toHaveBeenCalled()
+    })
+
+    it('does NOT log a skip message on mismatch (caller decides)', () => {
+      const ctx = makeContext('dev')
+      expect(utils.matchesBranchFilter(ctx, '^main$')).toBe(false)
+      expect(ctx.log.info).not.toHaveBeenCalled()
+    })
+  })
 })
