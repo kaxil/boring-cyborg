@@ -1,29 +1,11 @@
 const { verifyTitles } = require('../lib/title_validator')
+const { createMockContext } = require('./helpers')
 
 describe('title_validator', () => {
   let context
 
   beforeEach(() => {
-    context = {
-      log: {
-        info: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn()
-      },
-      octokit: {
-        pulls: {
-          get: jest.fn(),
-          listCommits: jest.fn()
-        },
-        rest: {
-          repos: {
-            createCommitStatus: jest.fn()
-          }
-        }
-      },
-      issue: jest.fn(() => ({ owner: 'owner', repo: 'repo', pull_number: 1 })),
-      repo: jest.fn((params) => ({ owner: 'owner', repo: 'repo', ...params }))
-    }
+    context = createMockContext()
   })
 
   describe('verifyTitles', () => {

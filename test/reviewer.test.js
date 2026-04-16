@@ -1,29 +1,11 @@
 const { addReviewersOnPr } = require('../lib/reviewer')
+const { createMockContext } = require('./helpers')
 
 describe('reviewer', () => {
   let context
 
   beforeEach(() => {
-    context = {
-      event: 'pull_request',
-      payload: {
-        action: 'labeled',
-        pull_request: { number: 1, base: { ref: 'main' } }
-      },
-      log: {
-        info: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn()
-      },
-      octokit: {
-        pulls: {
-          get: jest.fn(),
-          createReviewRequest: jest.fn()
-        }
-      },
-      issue: jest.fn(() => ({ owner: 'owner', repo: 'repo', pull_number: 1 })),
-      repo: jest.fn((params) => ({ owner: 'owner', repo: 'repo', ...params }))
-    }
+    context = createMockContext({ payload: { action: 'labeled' } })
   })
 
   describe('addReviewersOnPr', () => {
@@ -207,6 +189,31 @@ describe('reviewer', () => {
       await addReviewersOnPr(context, config)
 
       expect(context.log.warn).toHaveBeenCalled()
+      expect(context.octokit.pulls.createReviewRequest).not.toHaveBeenCalled()
+    })
+
+    it('should not make review request when all reviewers are the PR author', async () => {
+      const config = {
+        addReviewerBasedOnLabel: {
+          labels: {
+            frontend: ['author']
+          }
+        }
+      }
+
+      context.octokit.pulls.get.mockResolvedValue({
+        data: {
+          url: 'https://api.github.com/repos/owner/repo/pulls/1',
+          number: 1,
+          user: { login: 'author' },
+          labels: [{ name: 'frontend' }],
+          requested_reviewers: []
+        }
+      })
+
+      await addReviewersOnPr(context, config)
+
+      // After removing the author, no reviewers remain — should not call API
       expect(context.octokit.pulls.createReviewRequest).not.toHaveBeenCalled()
     })
 

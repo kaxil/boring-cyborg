@@ -1,28 +1,12 @@
 /* eslint-disable no-template-curly-in-string */
 const { insertIssueLinkInPrDescription } = require('../lib/issuelink')
+const { createMockContext } = require('./helpers')
 
 describe('issuelink', () => {
   let context
 
   beforeEach(() => {
-    context = {
-      event: 'pull_request',
-      payload: {
-        action: 'opened',
-        pull_request: { number: 1, base: { ref: 'main' } }
-      },
-      log: {
-        info: jest.fn(),
-        debug: jest.fn(),
-        warn: jest.fn()
-      },
-      octokit: {
-        pulls: { get: jest.fn() },
-        issues: { update: jest.fn() }
-      },
-      issue: jest.fn((params) => ({ owner: 'owner', repo: 'repo', issue_number: 1, ...params })),
-      repo: jest.fn((params) => ({ owner: 'owner', repo: 'repo', ...params }))
-    }
+    context = createMockContext()
   })
 
   const baseConfig = (matchers) => ({
@@ -77,6 +61,41 @@ describe('issuelink', () => {
     expect(context.octokit.issues.update).toHaveBeenCalledWith(
       expect.objectContaining({ body: 'Issue link: MAIN-AIRFLOW-1234' })
     )
+  })
+
+  it('should handle null PR body without crashing', async () => {
+    context.octokit.pulls.get.mockResolvedValue(
+      prWithTitleAndBody('[AIRFLOW-1234] Fix X', null)
+    )
+
+    await insertIssueLinkInPrDescription(context, baseConfig({
+      jiraIssueMatch: {
+        titleIssueIdRegexp: '\\[(AIRFLOW-[0-9]{4})\\]',
+        descriptionIssueLink: 'LINK-${1}'
+      }
+    }))
+
+    // Should bail out (placeholder not found in null body) without throwing
+    expect(context.octokit.issues.update).not.toHaveBeenCalled()
+    expect(context.log.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Placeholder not found')
+    )
+  })
+
+  it('should propagate errors from issues.update (await fix)', async () => {
+    context.octokit.pulls.get.mockResolvedValue(
+      prWithTitleAndBody('[AIRFLOW-1234] Fix X', 'Issue link: PLACEHOLDER')
+    )
+    context.octokit.issues.update.mockRejectedValue(new Error('API rate limited'))
+
+    await expect(
+      insertIssueLinkInPrDescription(context, baseConfig({
+        jiraIssueMatch: {
+          titleIssueIdRegexp: '\\[(AIRFLOW-[0-9]{4})\\]',
+          descriptionIssueLink: 'LINK-${1}'
+        }
+      }))
+    ).rejects.toThrow('API rate limited')
   })
 
   it('uses a matcher whose targetBranchFilter matches the base ref', async () => {
