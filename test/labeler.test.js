@@ -24,12 +24,10 @@ describe('labeler', () => {
         }
       })
 
-      context.octokit.pulls.listFiles.mockResolvedValue({
-        data: [
-          { filename: 'src/frontend/component.js' },
-          { filename: 'README.md' }
-        ]
-      })
+      context.octokit.paginate.mockResolvedValue([
+        { filename: 'src/frontend/component.js' },
+        { filename: 'README.md' }
+      ])
 
       await addLabelsOnPr(context, config)
 
@@ -56,12 +54,10 @@ describe('labeler', () => {
         }
       })
 
-      context.octokit.pulls.listFiles.mockResolvedValue({
-        data: [
-          { filename: 'README.md' },
-          { filename: 'docs/guide.md' }
-        ]
-      })
+      context.octokit.paginate.mockResolvedValue([
+        { filename: 'README.md' },
+        { filename: 'docs/guide.md' }
+      ])
 
       await addLabelsOnPr(context, config)
 
@@ -82,11 +78,9 @@ describe('labeler', () => {
         }
       })
 
-      context.octokit.pulls.listFiles.mockResolvedValue({
-        data: [
-          { filename: 'src/frontend/component.js' }
-        ]
-      })
+      context.octokit.paginate.mockResolvedValue([
+        { filename: 'src/frontend/component.js' }
+      ])
 
       await addLabelsOnPr(context, config)
 
@@ -118,13 +112,11 @@ describe('labeler', () => {
         }
       })
 
-      context.octokit.pulls.listFiles.mockResolvedValue({
-        data: [
-          { filename: 'db/migrations/2024/001_add_users.sql' },
-          { filename: 'src/__tests__/app.test.js' },
-          { filename: 'tsconfig.json' }
-        ]
-      })
+      context.octokit.paginate.mockResolvedValue([
+        { filename: 'db/migrations/2024/001_add_users.sql' },
+        { filename: 'src/__tests__/app.test.js' },
+        { filename: 'tsconfig.json' }
+      ])
 
       await addLabelsOnPr(context, config)
 
@@ -169,9 +161,9 @@ describe('labeler', () => {
           labels: []
         }
       })
-      context.octokit.pulls.listFiles.mockResolvedValue({
-        data: [{ filename: 'src/frontend/component.js' }]
-      })
+      context.octokit.paginate.mockResolvedValue([
+        { filename: 'src/frontend/component.js' }
+      ])
 
       await addLabelsOnPr(context, config)
 
@@ -200,12 +192,10 @@ describe('labeler', () => {
           labels: []
         }
       })
-      context.octokit.pulls.listFiles.mockResolvedValue({
-        data: [
-          { filename: 'src/frontend/component.js' },
-          { filename: 'src/backend/api.js' }
-        ]
-      })
+      context.octokit.paginate.mockResolvedValue([
+        { filename: 'src/frontend/component.js' },
+        { filename: 'src/backend/api.js' }
+      ])
 
       await addLabelsOnPr(context, config)
 
@@ -230,7 +220,7 @@ describe('labeler', () => {
           labels: []
         }
       })
-      context.octokit.pulls.listFiles.mockResolvedValue({ data: [] })
+      context.octokit.paginate.mockResolvedValue([])
 
       await addLabelsOnPr(context, config)
 

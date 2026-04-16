@@ -192,6 +192,35 @@ describe('reviewer', () => {
       expect(context.octokit.pulls.createReviewRequest).not.toHaveBeenCalled()
     })
 
+    it('should not re-request already-assigned reviewers', async () => {
+      const config = {
+        addReviewerBasedOnLabel: {
+          labels: {
+            frontend: ['already-assigned', 'new-reviewer']
+          }
+        }
+      }
+
+      context.octokit.pulls.get.mockResolvedValue({
+        data: {
+          url: 'https://api.github.com/repos/owner/repo/pulls/1',
+          number: 1,
+          user: { login: 'author' },
+          labels: [{ name: 'frontend' }],
+          requested_reviewers: [{ login: 'already-assigned' }]
+        }
+      })
+
+      await addReviewersOnPr(context, config)
+
+      expect(context.octokit.pulls.createReviewRequest).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        pull_number: 1,
+        reviewers: ['new-reviewer']
+      })
+    })
+
     it('should not make review request when all reviewers are the PR author', async () => {
       const config = {
         addReviewerBasedOnLabel: {

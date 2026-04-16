@@ -78,7 +78,7 @@ describe('greetings', () => {
         data: { total_count: 0, items: [] }
       })
       const notFoundError = new Error('Not Found')
-      notFoundError.code = 404
+      notFoundError.status = 404
       context.octokit.issues.createComment.mockRejectedValue(notFoundError)
 
       // 404 should be swallowed (PR deleted between webhook and handler)
@@ -94,7 +94,7 @@ describe('greetings', () => {
         data: { total_count: 0, items: [] }
       })
       const serverError = new Error('Internal Server Error')
-      serverError.code = 500
+      serverError.status = 500
       context.octokit.issues.createComment.mockRejectedValue(serverError)
 
       await expect(commentOnfirstPR(context, config)).rejects.toThrow('Internal Server Error')
@@ -175,12 +175,12 @@ describe('greetings', () => {
       })
 
       const notFoundError = new Error('Not Found')
-      notFoundError.code = 404
+      notFoundError.status = 404
       context.octokit.issues.createComment.mockRejectedValue(notFoundError)
       await expect(commentOnfirstPRMerge(context, config)).resolves.not.toThrow()
 
       const serverError = new Error('Server Error')
-      serverError.code = 500
+      serverError.status = 500
       context.octokit.issues.createComment.mockRejectedValue(serverError)
       await expect(commentOnfirstPRMerge(context, config)).rejects.toThrow('Server Error')
     })
@@ -234,12 +234,12 @@ describe('greetings', () => {
       })
 
       const notFoundError = new Error('Not Found')
-      notFoundError.code = 404
+      notFoundError.status = 404
       context.octokit.issues.createComment.mockRejectedValue(notFoundError)
       await expect(commentOnfirstIssue(context, config)).resolves.not.toThrow()
 
       const serverError = new Error('Server Error')
-      serverError.code = 500
+      serverError.status = 500
       context.octokit.issues.createComment.mockRejectedValue(serverError)
       await expect(commentOnfirstIssue(context, config)).rejects.toThrow('Server Error')
     })

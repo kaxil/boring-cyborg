@@ -26,9 +26,9 @@ describe('up_to_date_checker', () => {
   }
 
   const setupFiles = (filenames) => {
-    context.octokit.pulls.listFiles.mockResolvedValue({
-      data: filenames.map(f => ({ filename: f }))
-    })
+    context.octokit.paginate.mockResolvedValue(
+      filenames.map(f => ({ filename: f }))
+    )
   }
 
   const setupBranches = (headSha, targetSha) => {
