@@ -41,12 +41,23 @@ This is helpful when you desire the changes to be applied sequentially, for exam
 # Patterns are matched as regular expressions. Use ^ and $ anchors for exact
 # branch name matching (e.g. ^main$ instead of just main, which would also
 # match branches like "my-maintainer-branch").
+#
+# Individual rules inside `labelPRBasedOnFilePath`, `addReviewerBasedOnLabel.labels`,
+# and `insertIssueLinkInPrDescription.matchers` can each carry their own
+# `targetBranchFilter`. The top-level filter gates the feature entirely;
+# the per-rule filter then gates the individual rule. Rules without a filter
+# run on every branch that passes the top-level gate.
 targetBranchFilter:
   - ^main$
   - ^release/.*$
 
 ##### Labeler ##########################################################################################################
 # Enable "labeler" for your PR that would add labels to PRs based on the paths that are modified in the PR.
+#
+# Each label rule can be either:
+#   - a list of glob patterns (applies on every branch), or
+#   - an object with `paths` and an optional `targetBranchFilter` that limits the label
+#     to PRs whose base ref matches one of the patterns.
 labelPRBasedOnFilePath:
   # Add 'label1' to any changes within 'example' folder or any subfolders
   label1:
@@ -65,6 +76,13 @@ labelPRBasedOnFilePath:
   test:
     - src/**/*.spec.js
 
+  # Only apply 'needs-backport' on release branches
+  needs-backport:
+    paths:
+      - src/**/*
+    targetBranchFilter:
+      - ^release/.*$
+
 # Various Flags to control behaviour of the "Labeler"
 labelerFlags:
   # If this flag is changed to 'false', labels would only be added when the PR is first created and not when existing
@@ -74,6 +92,11 @@ labelerFlags:
 
 ##### Reviewer #########################################################################################################
 # Enable "Reviewer" for your PR that would add reviewers to PRs based on the lables that exist on the PR. You have the option to set a default reviewer that gets added to every PR, or you can omit that config variable to skip it.
+#
+# Each entry under `labels` can be either:
+#   - a list of reviewer logins (applies on every branch), or
+#   - an object with `reviewers` and an optional `targetBranchFilter` that limits
+#     the assignment to PRs whose base ref matches one of the patterns.
 addReviewerBasedOnLabel:
   # add list of reviewers to add by default to all PRs
   defaultReviewers:
@@ -85,6 +108,12 @@ addReviewerBasedOnLabel:
       - jordan-violet-sp
     label2:
       - kaxil
+    # Only request release managers on PRs targeting release branches
+    label3:
+      reviewers:
+        - release-manager
+      targetBranchFilter:
+        - ^release/.*$
 
 ##### Greetings ########################################################################################################
 # Comment to be posted to welcome users when they open their first PR
@@ -101,6 +130,10 @@ firstIssueWelcomeComment: >
 
 ###### IssueLink Adder #################################################################################################
 # Insert Issue (Jira/Github etc) link in PR description based on the Issue ID in PR title.
+#
+# Each matcher under `matchers` may declare an optional `targetBranchFilter` so that
+# the matcher only applies on matching base branches. The first matcher that is
+# both enabled for the base ref and whose regex matches the PR title is used.
 insertIssueLinkInPrDescription:
    # specify the placeholder for the issue link that should be present in the description
   descriptionIssuePlaceholderRegexp: "^Issue link: (.*)$"
@@ -117,6 +150,11 @@ insertIssueLinkInPrDescription:
     docOnlyIssueMatch:
       titleIssueIdRegexp: \[(AIRFLOW-X{4})\]
       descriptionIssueLink: "`Document only change, no JIRA issue`"
+    # Only used on release branches
+    releaseIssueMatch:
+      titleIssueIdRegexp: \[(AIRFLOW-[0-9]{4})\]
+      descriptionIssueLink: "[${1}](https://issues.apache.org/jira/browse/${1}/) (release)"
+      targetBranchFilter: ^release/.*$
 
 ###### Title Validator #################################################################################################
 # Verifies if commit/PR titles match the regexp specified
