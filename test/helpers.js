@@ -20,7 +20,9 @@ function createMockContext (overrides = {}) {
       number: 1,
       head: { sha: 'abc123', ref: 'feature-branch' },
       base: { sha: 'def456', ref: 'main' },
-      user: { login: 'testuser' },
+      user: { login: 'testuser', type: 'User' },
+      author_association: 'NONE',
+      merge_commit_sha: 'mergesha123',
       created_at: '2024-01-01T00:00:00Z',
       merged: false,
       merged_at: '2024-01-02T00:00:00Z',
@@ -31,7 +33,8 @@ function createMockContext (overrides = {}) {
     },
     issue: {
       number: 1,
-      user: { login: 'testuser' },
+      user: { login: 'testuser', type: 'User' },
+      author_association: 'NONE',
       html_url: 'https://github.com/owner/repo/issues/1',
       created_at: '2024-01-01T00:00:00Z'
     }
@@ -66,11 +69,13 @@ function createMockContext (overrides = {}) {
       issues: {
         addLabels: jest.fn(),
         createComment: jest.fn(),
-        update: jest.fn()
+        update: jest.fn(),
+        listForRepo: jest.fn()
       },
       repos: {
         getBranch: jest.fn(),
-        createCommitStatus: jest.fn()
+        createCommitStatus: jest.fn(),
+        listCommits: jest.fn()
       },
       rest: {
         search: {
