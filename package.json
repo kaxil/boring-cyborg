@@ -28,7 +28,7 @@
     "safe-regex2": "^5.1.1"
   },
   "devDependencies": {
-    "jest": "^30.0.0",
+    "jest": "^30.4.2",
     "nock": "^14.0.5",
     "nodemon": "^3.1.10",
     "smee-client": "^4.2.1",
