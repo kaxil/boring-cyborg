@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "ignore": "^7.0.5",
-    "probot": "^13.4.5",
+    "probot": "^14.3.2",
     "safe-regex2": "^5.1.1"
   },
   "devDependencies": {
