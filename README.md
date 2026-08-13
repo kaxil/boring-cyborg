@@ -56,8 +56,17 @@ targetBranchFilter:
 #
 # Each label rule can be either:
 #   - a list of glob patterns (applies on every branch), or
-#   - an object with `paths` and an optional `targetBranchFilter` that limits the label
-#     to PRs whose base ref matches one of the patterns.
+#   - an object with `paths`, an optional `targetBranchFilter` that limits the label
+#     to PRs whose base ref matches one of the patterns, and an optional
+#     `allFilesMatch` flag (see below).
+#
+# By default a label is applied when ANY changed file matches one of the rule's
+# patterns. Set `allFilesMatch: true` to instead apply the label only when ALL
+# changed files match — useful for labels like "tests-only" or "docs-only".
+# When such a rule stops holding (e.g. the PR gains a non-matching file),
+# the bot removes the label again on the next PR update. Because these labels
+# track the current state of the PR, they are kept in sync on every PR update,
+# even when `labelerFlags.labelOnPRUpdates` is set to 'false'.
 labelPRBasedOnFilePath:
   # Add 'label1' to any changes within 'example' folder or any subfolders
   label1:
@@ -82,6 +91,14 @@ labelPRBasedOnFilePath:
       - src/**/*
     targetBranchFilter:
       - ^release/.*$
+
+  # Add 'tests-only' when EVERY changed file in the PR is a test file,
+  # and remove it again if the PR later touches anything else
+  tests-only:
+    allFilesMatch: true
+    paths:
+      - '**/tests/**'
+      - '**/*.spec.js'
 
 # Various Flags to control behaviour of the "Labeler"
 labelerFlags:
