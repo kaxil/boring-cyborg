@@ -17,14 +17,15 @@
     "dev": "nodemon",
     "start": "probot run ./index.js",
     "lint": "standard --fix",
-    "test": "jest && standard",
-    "test:watch": "jest --watch --notify --notifyMode=change --coverage",
+    "jest": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "npm run jest && standard",
+    "test:watch": "npm run jest -- --watch --notify --notifyMode=change --coverage",
     "request_labeled": "node_modules/.bin/probot receive -e pull_request -p test/pr.labeled.json index.js",
     "request_unlabeled": "node_modules/.bin/probot receive -e pull_request -p test/pr.unlabeled.json ./index.js"
   },
   "dependencies": {
     "ignore": "^7.0.6",
-    "probot": "^13.4.5",
+    "probot": "^14.3.7",
     "safe-regex2": "^5.1.1"
   },
   "devDependencies": {
@@ -35,7 +36,7 @@
     "standard": "^17.1.2"
   },
   "engines": {
-    "node": ">= 18.0.0"
+    "node": ">= 22"
   },
   "standard": {
     "env": [

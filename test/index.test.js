@@ -1,6 +1,5 @@
 const pino = require('pino')
 const Stream = require('stream')
-const { Probot, ProbotOctokit } = require('probot')
 const myProbotApp = require('../index.js')
 const utils = require('../lib/utils')
 const labeler = require('../lib/labeler')
@@ -10,8 +9,15 @@ const titleValidator = require('../lib/title_validator')
 const upToDateChecker = require('../lib/up_to_date_checker')
 
 describe('Boring Cyborg App Integration', () => {
+  let Probot
+  let ProbotOctokit
   let probot
   let logOutput
+
+  beforeAll(async () => {
+    // Probot v14 is ESM-only; Jest's CommonJS runtime can only load it through import()
+    ({ Probot, ProbotOctokit } = await import('probot'))
+  })
 
   beforeEach(() => {
     // Capture log output using pino stream (following official Probot docs)
@@ -63,12 +69,12 @@ describe('Boring Cyborg App Integration', () => {
   describe('App Initialization', () => {
     it('should load the app without errors', () => {
       expect(() => {
-        myProbotApp(probot, { getRouter: jest.fn() })
+        myProbotApp(probot, { addHandler: jest.fn() })
       }).not.toThrow()
     })
 
     it('should log app loaded message', () => {
-      myProbotApp(probot, { getRouter: jest.fn() })
+      myProbotApp(probot, { addHandler: jest.fn() })
 
       const appLoadedLogs = logOutput.filter(log =>
         log.level === 30 && // pino info level is 30
@@ -92,7 +98,7 @@ describe('Boring Cyborg App Integration', () => {
         return originalOnAny.call(probot, handler)
       })
 
-      myProbotApp(probot, { getRouter: jest.fn() })
+      myProbotApp(probot, { addHandler: jest.fn() })
 
       // Check that handlers were registered
       expect(probot.onAny).toHaveBeenCalledTimes(1)
@@ -106,7 +112,7 @@ describe('Boring Cyborg App Integration', () => {
     it('should use onAny instead of on("*") for universal event handler', () => {
       const onAnySpy = jest.spyOn(probot, 'onAny')
 
-      myProbotApp(probot, { getRouter: jest.fn() })
+      myProbotApp(probot, { addHandler: jest.fn() })
 
       // Verify onAny was called (this would fail if we used app.on('*'))
       expect(onAnySpy).toHaveBeenCalledWith(expect.any(Function))
@@ -125,7 +131,7 @@ describe('Boring Cyborg App Integration', () => {
       const uptodateSpy = jest.spyOn(upToDateChecker, 'checkUpToDate').mockResolvedValue()
       const greetingSpy = jest.spyOn(greetings, 'commentOnfirstPR').mockResolvedValue()
 
-      myProbotApp(probot, { getRouter: jest.fn() })
+      myProbotApp(probot, { addHandler: jest.fn() })
 
       // PR targeting 'main' should be blocked by filter '^release/.*$'
       await probot.receive({ id: '1', name: 'pull_request', payload: prPayload('opened', 'main') })
@@ -144,7 +150,7 @@ describe('Boring Cyborg App Integration', () => {
       })
       const labelerSpy = jest.spyOn(labeler, 'addLabelsOnPr').mockResolvedValue()
 
-      myProbotApp(probot, { getRouter: jest.fn() })
+      myProbotApp(probot, { addHandler: jest.fn() })
 
       await probot.receive({ id: '1', name: 'pull_request', payload: prPayload('opened', 'main') })
 
@@ -158,7 +164,7 @@ describe('Boring Cyborg App Integration', () => {
       })
       const greetingSpy = jest.spyOn(greetings, 'commentOnfirstIssue').mockResolvedValue()
 
-      myProbotApp(probot, { getRouter: jest.fn() })
+      myProbotApp(probot, { addHandler: jest.fn() })
 
       await probot.receive({
         id: '2',
@@ -194,7 +200,7 @@ describe('Boring Cyborg App Integration', () => {
       const labelerSpy = jest.spyOn(labeler, 'addLabelsOnPr').mockResolvedValue()
       const titleSpy = jest.spyOn(titleValidator, 'verifyTitles').mockResolvedValue()
 
-      myProbotApp(probot, { getRouter: jest.fn() })
+      myProbotApp(probot, { addHandler: jest.fn() })
 
       await probot.receive({ id: '1', name: 'pull_request', payload: prPayload('opened', 'main') })
 
@@ -205,63 +211,61 @@ describe('Boring Cyborg App Integration', () => {
   })
 
   describe('Stats Endpoint', () => {
-    let routeHandler
-    let mockReq
-    let mockRes
+    let statsHandler
 
     beforeEach(() => {
-      const routes = {}
-      const mockRouter = {
-        get: jest.fn((path, handler) => { routes[path] = handler })
-      }
-      const mockGetRouter = jest.fn(() => mockRouter)
+      delete process.env.STATS_API_KEY // Don't let a key exported in the shell leak in
+      const addHandler = jest.fn()
+      myProbotApp(probot, { addHandler })
+      statsHandler = addHandler.mock.calls[0][0]
+    })
 
-      myProbotApp(probot, { getRouter: mockGetRouter })
-      routeHandler = routes['/stats']
+    afterEach(() => {
+      delete process.env.STATS_API_KEY
+    })
 
-      mockRes = {
-        status: jest.fn(function () { return this }),
-        json: jest.fn()
-      }
+    const callStats = async ({ method = 'GET', url = '/boring-cyborg/stats', headers = {} } = {}) => {
+      const res = { writeHead: jest.fn(), end: jest.fn() }
+      const handled = await statsHandler({ method, url, headers }, res)
+      const status = res.writeHead.mock.calls[0]?.[0]
+      const raw = res.end.mock.calls[0]?.[0]
+      return { handled, status, body: raw && JSON.parse(raw) }
+    }
+
+    it.each([
+      ['another path', { url: '/api/github/webhooks' }],
+      ['a POST', { method: 'POST' }],
+      ['a path that new URL() rejects', { url: '//' }]
+    ])('should let %s through to the next handler', async (_label, request) => {
+      const result = await callStats(request)
+
+      expect(result).toEqual({ handled: false, status: undefined, body: undefined })
     })
 
     it('should return 401 when no Authorization header', async () => {
       process.env.STATS_API_KEY = 'test-key'
-      mockReq = { headers: {} }
 
-      await routeHandler(mockReq, mockRes)
+      const result = await callStats()
 
-      expect(mockRes.status).toHaveBeenCalledWith(401)
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Missing or invalid Authorization header' })
-      delete process.env.STATS_API_KEY
+      expect(result).toEqual({ handled: true, status: 401, body: { error: 'Missing or invalid Authorization header' } })
     })
 
     it('should return 403 when API key is wrong', async () => {
       process.env.STATS_API_KEY = 'correct-key'
-      mockReq = { headers: { authorization: 'Bearer wrong-key' } }
 
-      await routeHandler(mockReq, mockRes)
+      const result = await callStats({ headers: { authorization: 'Bearer wrong-key' } })
 
-      expect(mockRes.status).toHaveBeenCalledWith(403)
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Invalid API key' })
-      delete process.env.STATS_API_KEY
+      expect(result).toEqual({ handled: true, status: 403, body: { error: 'Invalid API key' } })
     })
 
     it('should return 500 when STATS_API_KEY is not configured', async () => {
-      delete process.env.STATS_API_KEY
-      mockReq = { headers: { authorization: 'Bearer some-key' } }
+      const result = await callStats({ headers: { authorization: 'Bearer some-key' } })
 
-      await routeHandler(mockReq, mockRes)
-
-      expect(mockRes.status).toHaveBeenCalledWith(500)
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'STATS_API_KEY not configured' })
+      expect(result).toEqual({ handled: true, status: 500, body: { error: 'STATS_API_KEY not configured' } })
     })
 
-    it('should return stats with valid API key', async () => {
+    it('should return stats with valid API key, ignoring the query string', async () => {
       process.env.STATS_API_KEY = 'test-key'
-      mockReq = { headers: { authorization: 'Bearer test-key' } }
-
-      // Mock app.auth() to return an octokit with paginate
       jest.spyOn(probot, 'auth').mockResolvedValue({
         paginate: jest.fn().mockResolvedValue([
           { id: 1, account: { login: 'org1', type: 'Organization' } },
@@ -270,29 +274,34 @@ describe('Boring Cyborg App Integration', () => {
         rest: { apps: { listInstallations: jest.fn() } }
       })
 
-      await routeHandler(mockReq, mockRes)
+      const result = await callStats({ url: '/boring-cyborg/stats?x=1', headers: { authorization: 'Bearer test-key' } })
 
-      expect(mockRes.json).toHaveBeenCalledWith({
-        totalInstallations: 2,
-        installations: [
-          { id: 1, account: 'org1', account_type: 'Organization' },
-          { id: 2, account: 'user1', account_type: 'User' }
-        ]
+      expect(result).toEqual({
+        handled: true,
+        status: 200,
+        body: {
+          totalInstallations: 2,
+          installations: [
+            { id: 1, account: 'org1', account_type: 'Organization' },
+            { id: 2, account: 'user1', account_type: 'User' }
+          ]
+        }
       })
-      delete process.env.STATS_API_KEY
     })
 
     it('should return 500 when GitHub API call fails', async () => {
       process.env.STATS_API_KEY = 'test-key'
-      mockReq = { headers: { authorization: 'Bearer test-key' } }
-
       jest.spyOn(probot, 'auth').mockRejectedValue(new Error('GitHub API down'))
 
-      await routeHandler(mockReq, mockRes)
+      const result = await callStats({ headers: { authorization: 'Bearer test-key' } })
 
-      expect(mockRes.status).toHaveBeenCalledWith(500)
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Failed to fetch stats' })
-      delete process.env.STATS_API_KEY
+      expect(result).toEqual({ handled: true, status: 500, body: { error: 'Failed to fetch stats' } })
     })
+  })
+
+  it('should still load when there is no HTTP server, as under `probot receive`', () => {
+    const addHandler = jest.fn(() => { throw new Error('No server instance') })
+
+    expect(() => myProbotApp(probot, { addHandler })).not.toThrow()
   })
 })

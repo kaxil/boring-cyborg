@@ -20,7 +20,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -32,7 +32,7 @@ describe('reviewer', () => {
 
       await addReviewersOnPr(context, config)
 
-      expect(context.octokit.pulls.createReviewRequest).toHaveBeenCalledWith({
+      expect(context.octokit.rest.pulls.requestReviewers).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         pull_number: 1,
@@ -49,7 +49,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -61,7 +61,7 @@ describe('reviewer', () => {
 
       await addReviewersOnPr(context, config)
 
-      expect(context.octokit.pulls.createReviewRequest).toHaveBeenCalledWith({
+      expect(context.octokit.rest.pulls.requestReviewers).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         pull_number: 1,
@@ -78,7 +78,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -90,7 +90,7 @@ describe('reviewer', () => {
 
       await addReviewersOnPr(context, config)
 
-      expect(context.octokit.pulls.createReviewRequest).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.requestReviewers).not.toHaveBeenCalled()
     })
 
     it('should skip if config not present', async () => {
@@ -98,8 +98,8 @@ describe('reviewer', () => {
 
       await addReviewersOnPr(context, config)
 
-      expect(context.octokit.pulls.get).not.toHaveBeenCalled()
-      expect(context.octokit.pulls.createReviewRequest).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.get).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.requestReviewers).not.toHaveBeenCalled()
     })
 
     it('should accept the object rule form with reviewers + targetBranchFilter', async () => {
@@ -114,7 +114,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -126,7 +126,7 @@ describe('reviewer', () => {
 
       await addReviewersOnPr(context, config)
 
-      expect(context.octokit.pulls.createReviewRequest).toHaveBeenCalledWith({
+      expect(context.octokit.rest.pulls.requestReviewers).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         pull_number: 1,
@@ -147,7 +147,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -159,7 +159,7 @@ describe('reviewer', () => {
 
       await addReviewersOnPr(context, config)
 
-      expect(context.octokit.pulls.createReviewRequest).toHaveBeenCalledWith({
+      expect(context.octokit.rest.pulls.requestReviewers).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         pull_number: 1,
@@ -176,7 +176,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -189,7 +189,7 @@ describe('reviewer', () => {
       await addReviewersOnPr(context, config)
 
       expect(context.log.warn).toHaveBeenCalled()
-      expect(context.octokit.pulls.createReviewRequest).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.requestReviewers).not.toHaveBeenCalled()
     })
 
     it('should not re-request already-assigned reviewers', async () => {
@@ -201,7 +201,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -213,7 +213,7 @@ describe('reviewer', () => {
 
       await addReviewersOnPr(context, config)
 
-      expect(context.octokit.pulls.createReviewRequest).toHaveBeenCalledWith({
+      expect(context.octokit.rest.pulls.requestReviewers).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         pull_number: 1,
@@ -230,7 +230,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -243,10 +243,15 @@ describe('reviewer', () => {
       await addReviewersOnPr(context, config)
 
       // After removing the author, no reviewers remain — should not call API
-      expect(context.octokit.pulls.createReviewRequest).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.requestReviewers).not.toHaveBeenCalled()
     })
 
-    it('should handle API errors gracefully', async () => {
+    it.each([
+      [422, 'resolves and warns', true],
+      [500, 'rethrows', false],
+      [undefined, 'rethrows', false]
+    ])('on a review request error with status %s, %s', async (status, _label, shouldResolve) => {
+      const context = createMockContext({ payload: { action: 'labeled' } })
       const config = {
         addReviewerBasedOnLabel: {
           labels: {
@@ -255,7 +260,7 @@ describe('reviewer', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           number: 1,
@@ -264,11 +269,51 @@ describe('reviewer', () => {
           requested_reviewers: []
         }
       })
+      const error = Object.assign(new Error('API Error'), { status })
+      context.octokit.rest.pulls.requestReviewers.mockRejectedValue(error)
 
-      context.octokit.pulls.createReviewRequest.mockRejectedValue(new Error('API Error'))
+      const result = addReviewersOnPr(context, config)
 
-      await expect(addReviewersOnPr(context, config)).resolves.not.toThrow()
-      expect(context.log.debug).toHaveBeenCalled()
+      if (shouldResolve) {
+        await expect(result).resolves.toBeUndefined()
+        expect(context.log.warn).toHaveBeenCalledWith(expect.stringContaining('API Error'))
+      } else {
+        await expect(result).rejects.toBe(error)
+      }
+    })
+
+    it('should still request the valid reviewers when GitHub refuses one of them', async () => {
+      const config = {
+        addReviewerBasedOnLabel: {
+          labels: {
+            frontend: ['alice', 'departed-user']
+          }
+        }
+      }
+
+      context.octokit.rest.pulls.get.mockResolvedValue({
+        data: {
+          url: 'https://api.github.com/repos/owner/repo/pulls/1',
+          number: 1,
+          user: { login: 'author' },
+          labels: [{ name: 'frontend' }],
+          requested_reviewers: []
+        }
+      })
+      const notCollaborator = Object.assign(new Error('Reviews may only be requested from collaborators'), { status: 422 })
+      context.octokit.rest.pulls.requestReviewers.mockImplementation(async ({ reviewers }) => {
+        if (reviewers.includes('departed-user')) throw notCollaborator
+      })
+
+      await addReviewersOnPr(context, config)
+
+      expect(context.octokit.rest.pulls.requestReviewers.mock.calls.map(([params]) => params.reviewers)).toEqual([
+        ['alice', 'departed-user'],
+        ['alice'],
+        ['departed-user']
+      ])
+      expect(context.log.warn).toHaveBeenCalledTimes(1)
+      expect(context.log.warn).toHaveBeenCalledWith(expect.stringContaining('departed-user'))
     })
   })
 })
