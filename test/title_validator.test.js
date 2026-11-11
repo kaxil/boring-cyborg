@@ -71,6 +71,29 @@ describe('title_validator', () => {
       })
     })
 
+    // 'Wrong PR title: ' is 16 characters. An emoji is one character but two UTF-16 units, so
+    // 124 of them fill the 140 exactly, and a cut by unit would split one.
+    it.each([
+      ['cut to 140 characters with an ellipsis', 130, 'Wrong PR title: ' + '🚀'.repeat(123) + '…'],
+      ['left whole at exactly 140 characters', 124, 'Wrong PR title: ' + '🚀'.repeat(124)]
+    ])('should post a failure message that is %s', async (_, emojiCount, expected) => {
+      const config = {
+        verifyTitles: {
+          titleRegexp: '^(feat|fix|docs)\\(.+\\): .+',
+          alwaysUsePrTitle: true,
+          // eslint-disable-next-line no-template-curly-in-string
+          failureMessage: 'Wrong ${type} title: ${title}'
+        }
+      }
+      context.octokit.rest.pulls.get.mockResolvedValue({
+        data: { url: 'https://api.github.com/repos/owner/repo/pulls/1', title: '🚀'.repeat(emojiCount), head: { sha: 'abc123' } }
+      })
+
+      await verifyTitles(context, config)
+
+      expect(context.octokit.rest.repos.createCommitStatus.mock.calls[0][0].description).toBe(expected)
+    })
+
     it('should validate commit titles when not using PR title', async () => {
       const config = {
         verifyTitles: {
