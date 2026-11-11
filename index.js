@@ -12,8 +12,8 @@ module.exports = (app, { addHandler }) => {
   app.onAny(async context => {
     // Only log events we care about to reduce noise
     const relevantEvents = ['pull_request', 'issues', 'push']
-    if (relevantEvents.includes(context.event)) {
-      context.log.info(`${context.event}.${context.payload.action || 'unknown'}`)
+    if (relevantEvents.includes(context.name)) {
+      context.log.info(`${context.name}.${context.payload.action || 'unknown'}`)
     }
   })
 

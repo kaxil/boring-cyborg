@@ -51,7 +51,7 @@ function createMockContext (overrides = {}) {
   }
 
   return {
-    event: 'pull_request',
+    name: 'pull_request',
     payload,
     log: {
       info: jest.fn(),
