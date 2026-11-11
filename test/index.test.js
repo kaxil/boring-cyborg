@@ -192,6 +192,16 @@ describe('Boring Cyborg App Integration', () => {
       expect(greetingSpy).toHaveBeenCalled()
     })
 
+    it('should log relevant events by name and action', async () => {
+      jest.spyOn(utils, 'getConfig').mockResolvedValue({})
+
+      myProbotApp(probot, { addHandler: jest.fn() })
+
+      await probot.receive({ id: '1', name: 'pull_request', payload: prPayload('opened', 'main') })
+
+      expect(logOutput.map(log => log.msg)).toContain('pull_request.opened')
+    })
+
     it('should invoke multiple handlers for the same event', async () => {
       jest.spyOn(utils, 'getConfig').mockResolvedValue({
         labelPRBasedOnFilePath: { frontend: ['src/**'] },

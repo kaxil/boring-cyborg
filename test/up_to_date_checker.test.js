@@ -15,11 +15,12 @@ describe('up_to_date_checker', () => {
     })
   })
 
-  const setupPr = (headRef = 'feature-branch') => {
+  const setupPr = () => {
     context.octokit.rest.pulls.get.mockResolvedValue({
       data: {
         url: 'https://api.github.com/repos/owner/repo/pulls/1',
-        head: { sha: 'pr-head-sha', ref: headRef },
+        // Opened from a fork, so the head branch exists in contributor/repo, not here
+        head: { sha: 'pr-head-sha', ref: 'feature-branch', repo: { full_name: 'contributor/repo' } },
         base: { sha: 'target-branch-sha', ref: 'main' }
       }
     })
@@ -31,10 +32,8 @@ describe('up_to_date_checker', () => {
     )
   }
 
-  const setupBranches = (headSha, targetSha) => {
-    context.octokit.rest.repos.getBranch
-      .mockResolvedValueOnce({ data: { commit: { sha: headSha } } })
-      .mockResolvedValueOnce({ data: { commit: { sha: targetSha } } })
+  const setupTargetBranch = (targetSha) => {
+    context.octokit.rest.repos.getBranch.mockResolvedValue({ data: { commit: { sha: targetSha } } })
   }
 
   describe('checkUpToDate', () => {
@@ -49,7 +48,7 @@ describe('up_to_date_checker', () => {
       setupPr()
       setupFiles(['migrations/001.sql'])
       // target branch sha matches the context base sha => up to date
-      setupBranches('fresh-head-sha', 'target-branch-sha')
+      setupTargetBranch('target-branch-sha')
 
       await checkUpToDate(context, config)
 
@@ -57,12 +56,13 @@ describe('up_to_date_checker', () => {
         expect.objectContaining({
           state: 'success',
           context: 'Up-to-date Checker',
-          description: 'PR is up to date with base branch'
+          description: 'PR is up to date with base branch',
+          sha: 'pr-head-sha'
         })
       )
     })
 
-    it('should set pending status when PR is NOT up to date, using fresh head SHA', async () => {
+    it('should set pending status on the PR head SHA when PR is NOT up to date, even from a fork', async () => {
       const config = {
         checkUpToDate: {
           files: ['migrations/*'],
@@ -73,7 +73,7 @@ describe('up_to_date_checker', () => {
       setupPr()
       setupFiles(['migrations/001.sql'])
       // target branch sha differs from context base sha => not up to date
-      setupBranches('fresh-head-sha', 'different-target-sha')
+      setupTargetBranch('different-target-sha')
 
       await checkUpToDate(context, config)
 
@@ -83,9 +83,10 @@ describe('up_to_date_checker', () => {
         context: 'Up-to-date Checker',
         description: 'PR is not up to date with base branch'
       })
-      // The status must be posted against the fresh head SHA from getBranch,
-      // not the stale context.payload.pull_request.head.sha
-      expect(statusCall.sha).toBe('fresh-head-sha')
+      // The fresh head SHA from pulls.get, not the stale context.payload.pull_request.head.sha
+      expect(statusCall.sha).toBe('pr-head-sha')
+      // Only the target branch is looked up: a fork PR's head branch doesn't exist in this repo
+      expect(context.octokit.rest.repos.getBranch.mock.calls.map(([params]) => params.branch)).toEqual(['master'])
     })
 
     it('should set success status when no files match the pattern', async () => {
@@ -98,8 +99,8 @@ describe('up_to_date_checker', () => {
 
       setupPr()
       setupFiles(['src/app.js', 'README.md'])
-      // Branches shouldn't even be fetched, but set up to avoid unhandled rejection
-      setupBranches('head-sha', 'target-sha')
+      // The branch shouldn't even be fetched, but set up to avoid unhandled rejection
+      setupTargetBranch('target-sha')
 
       await checkUpToDate(context, config)
 
@@ -131,7 +132,7 @@ describe('up_to_date_checker', () => {
 
       setupPr()
       setupFiles(['schema/tables.sql'])
-      setupBranches('head-sha', 'target-branch-sha')
+      setupTargetBranch('target-branch-sha')
 
       await checkUpToDate(context, config)
 
@@ -187,32 +188,13 @@ describe('up_to_date_checker', () => {
 
       setupPr()
       setupFiles(['migrations/001.sql'])
-      setupBranches('head-sha', 'target-branch-sha')
+      setupTargetBranch('target-branch-sha')
 
       await checkUpToDate(context, config)
 
-      // getBranch is called twice: once for head branch, once for target branch
-      const targetBranchCall = context.octokit.rest.repos.getBranch.mock.calls[1][0]
-      expect(targetBranchCall.branch).toBe('develop')
-    })
-
-    it('should post success status using PR head SHA when up to date', async () => {
-      const config = {
-        checkUpToDate: {
-          files: ['migrations/*'],
-          targetBranch: 'master'
-        }
-      }
-
-      setupPr('my-feature')
-      setupFiles(['migrations/001.sql'])
-      setupBranches('fresh-head-sha', 'target-branch-sha')
-
-      await checkUpToDate(context, config)
-
-      // When up to date, status uses pr.head.sha from pulls.get (not getBranch)
-      const statusCall = context.octokit.rest.repos.createCommitStatus.mock.calls[0][0]
-      expect(statusCall.sha).toBe('pr-head-sha')
+      expect(context.octokit.rest.repos.getBranch).toHaveBeenCalledWith(
+        expect.objectContaining({ branch: 'develop' })
+      )
     })
   })
 })

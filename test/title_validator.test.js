@@ -27,12 +27,9 @@ describe('title_validator', () => {
         }
       })
 
-      context.octokit.rest.pulls.listCommits.mockResolvedValue({
-        data: []
-      })
-
       await verifyTitles(context, config)
 
+      expect(context.octokit.paginate).not.toHaveBeenCalled()
       expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
@@ -62,10 +59,6 @@ describe('title_validator', () => {
         }
       })
 
-      context.octokit.rest.pulls.listCommits.mockResolvedValue({
-        data: []
-      })
-
       await verifyTitles(context, config)
 
       expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith({
@@ -92,15 +85,14 @@ describe('title_validator', () => {
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           title: 'Some PR title',
-          head: { sha: 'abc123' }
+          head: { sha: 'abc123' },
+          commits: 1
         }
       })
 
-      context.octokit.rest.pulls.listCommits.mockResolvedValue({
-        data: [
-          { commit: { message: 'feat(api): add new endpoint' } }
-        ]
-      })
+      context.octokit.paginate.mockResolvedValue([
+        { commit: { message: 'feat(api): add new endpoint' } }
+      ])
 
       await verifyTitles(context, config)
 
@@ -129,15 +121,14 @@ describe('title_validator', () => {
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           title: 'Some PR title',
-          head: { sha: 'abc123' }
+          head: { sha: 'abc123' },
+          commits: 1
         }
       })
 
-      context.octokit.rest.pulls.listCommits.mockResolvedValue({
-        data: [
-          { commit: { message: 'invalid commit message' } }
-        ]
-      })
+      context.octokit.paginate.mockResolvedValue([
+        { commit: { message: 'invalid commit message' } }
+      ])
 
       await verifyTitles(context, config)
 
@@ -164,12 +155,9 @@ describe('title_validator', () => {
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           title: 'Some PR title',
-          head: { sha: 'abc123' }
+          head: { sha: 'abc123' },
+          commits: 0
         }
-      })
-
-      context.octokit.rest.pulls.listCommits.mockResolvedValue({
-        data: []
       })
 
       await verifyTitles(context, config)
@@ -182,6 +170,84 @@ describe('title_validator', () => {
         state: 'failure',
         description: 'No commits ?????'
       })
+    })
+
+    it('should list commits across all pages when validating commit titles', async () => {
+      const config = {
+        verifyTitles: {
+          titleRegexp: '^feat: .+'
+        }
+      }
+
+      context.octokit.rest.pulls.get.mockResolvedValue({
+        data: {
+          url: 'https://api.github.com/repos/owner/repo/pulls/1',
+          title: 'feat: big change',
+          head: { sha: 'abc123' },
+          commits: 2
+        }
+      })
+      context.octokit.paginate.mockResolvedValue([
+        { commit: { message: 'feat: step one' } },
+        { commit: { message: 'wip oops' } }
+      ])
+
+      await verifyTitles(context, config)
+
+      expect(context.octokit.paginate).toHaveBeenCalledWith(
+        context.octokit.rest.pulls.listCommits,
+        expect.objectContaining({ pull_number: 1, per_page: 100 })
+      )
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'failure', description: 'Wrong Commit title: wip oops' })
+      )
+    })
+
+    it('should warn when GitHub lists fewer commits than the PR has', async () => {
+      const config = {
+        verifyTitles: {
+          titleRegexp: '^feat: .+'
+        }
+      }
+
+      context.octokit.rest.pulls.get.mockResolvedValue({
+        data: {
+          url: 'https://api.github.com/repos/owner/repo/pulls/1',
+          title: 'feat: big change',
+          head: { sha: 'abc123' },
+          commits: 300
+        }
+      })
+      context.octokit.paginate.mockResolvedValue([{ commit: { message: 'feat: step one' } }])
+
+      await verifyTitles(context, config)
+
+      expect(context.log.warn).toHaveBeenCalledWith(expect.stringContaining('only 1 of the PR\'s 300 commits'))
+    })
+
+    it('should check only the PR title, without listing commits, when there are several commits and validateEitherPrOrSingleCommitTitle is set', async () => {
+      const config = {
+        verifyTitles: {
+          titleRegexp: '^feat: .+',
+          validateEitherPrOrSingleCommitTitle: true
+        }
+      }
+
+      context.octokit.rest.pulls.get.mockResolvedValue({
+        data: {
+          url: 'https://api.github.com/repos/owner/repo/pulls/1',
+          title: 'feat: big change',
+          head: { sha: 'abc123' },
+          commits: 3
+        }
+      })
+
+      await verifyTitles(context, config)
+
+      expect(context.octokit.paginate).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'success' })
+      )
     })
 
     it('should skip if config not present', async () => {
