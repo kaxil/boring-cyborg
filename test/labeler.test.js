@@ -17,7 +17,7 @@ describe('labeler', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           labels: []
@@ -31,7 +31,7 @@ describe('labeler', () => {
 
       await addLabelsOnPr(context, config)
 
-      expect(context.octokit.issues.addLabels).toHaveBeenCalledWith({
+      expect(context.octokit.rest.issues.addLabels).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         issue_number: 1,
@@ -47,7 +47,7 @@ describe('labeler', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           labels: []
@@ -61,7 +61,7 @@ describe('labeler', () => {
 
       await addLabelsOnPr(context, config)
 
-      expect(context.octokit.issues.addLabels).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.addLabels).not.toHaveBeenCalled()
     })
 
     it('should not add existing labels', async () => {
@@ -71,7 +71,7 @@ describe('labeler', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           labels: [{ name: 'frontend' }]
@@ -84,7 +84,7 @@ describe('labeler', () => {
 
       await addLabelsOnPr(context, config)
 
-      expect(context.octokit.issues.addLabels).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.addLabels).not.toHaveBeenCalled()
     })
 
     it('should skip labeling if config not present', async () => {
@@ -92,8 +92,8 @@ describe('labeler', () => {
 
       await addLabelsOnPr(context, config)
 
-      expect(context.octokit.pulls.get).not.toHaveBeenCalled()
-      expect(context.octokit.issues.addLabels).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.get).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.addLabels).not.toHaveBeenCalled()
     })
 
     it('should match non-trivial glob patterns correctly', async () => {
@@ -105,7 +105,7 @@ describe('labeler', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           labels: []
@@ -120,7 +120,7 @@ describe('labeler', () => {
 
       await addLabelsOnPr(context, config)
 
-      expect(context.octokit.issues.addLabels).toHaveBeenCalledWith(
+      expect(context.octokit.rest.issues.addLabels).toHaveBeenCalledWith(
         expect.objectContaining({
           labels: expect.arrayContaining(['migrations', 'tests', 'config'])
         })
@@ -141,8 +141,8 @@ describe('labeler', () => {
 
       await addLabelsOnPr(context, config)
 
-      expect(context.octokit.pulls.get).not.toHaveBeenCalled()
-      expect(context.octokit.issues.addLabels).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.get).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.addLabels).not.toHaveBeenCalled()
     })
 
     it('should accept the object rule form with paths + targetBranchFilter', async () => {
@@ -155,7 +155,7 @@ describe('labeler', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           labels: []
@@ -167,7 +167,7 @@ describe('labeler', () => {
 
       await addLabelsOnPr(context, config)
 
-      expect(context.octokit.issues.addLabels).toHaveBeenCalledWith({
+      expect(context.octokit.rest.issues.addLabels).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         issue_number: 1,
@@ -186,7 +186,7 @@ describe('labeler', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           labels: []
@@ -199,7 +199,7 @@ describe('labeler', () => {
 
       await addLabelsOnPr(context, config)
 
-      expect(context.octokit.issues.addLabels).toHaveBeenCalledWith({
+      expect(context.octokit.rest.issues.addLabels).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
         issue_number: 1,
@@ -214,7 +214,7 @@ describe('labeler', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           labels: []
@@ -225,7 +225,7 @@ describe('labeler', () => {
       await addLabelsOnPr(context, config)
 
       expect(context.log.warn).toHaveBeenCalled()
-      expect(context.octokit.issues.addLabels).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.addLabels).not.toHaveBeenCalled()
     })
   })
 })

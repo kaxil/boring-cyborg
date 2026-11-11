@@ -60,29 +60,23 @@ function createMockContext (overrides = {}) {
     },
     octokit: {
       paginate: jest.fn(),
-      pulls: {
-        get: jest.fn(),
-        listFiles: jest.fn(),
-        listCommits: jest.fn(),
-        createReviewRequest: jest.fn()
-      },
-      issues: {
-        addLabels: jest.fn(),
-        createComment: jest.fn(),
-        update: jest.fn(),
-        listForRepo: jest.fn()
-      },
-      repos: {
-        getBranch: jest.fn(),
-        createCommitStatus: jest.fn(),
-        listCommits: jest.fn()
-      },
       rest: {
-        search: {
-          issuesAndPullRequests: jest.fn()
+        pulls: {
+          get: jest.fn(),
+          listFiles: jest.fn(),
+          listCommits: jest.fn(),
+          requestReviewers: jest.fn()
+        },
+        issues: {
+          addLabels: jest.fn(),
+          createComment: jest.fn(),
+          update: jest.fn(),
+          listForRepo: jest.fn()
         },
         repos: {
-          createCommitStatus: jest.fn()
+          getBranch: jest.fn(),
+          createCommitStatus: jest.fn(),
+          listCommits: jest.fn()
         }
       }
     },

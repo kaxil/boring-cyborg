@@ -16,7 +16,7 @@ describe('up_to_date_checker', () => {
   })
 
   const setupPr = (headRef = 'feature-branch') => {
-    context.octokit.pulls.get.mockResolvedValue({
+    context.octokit.rest.pulls.get.mockResolvedValue({
       data: {
         url: 'https://api.github.com/repos/owner/repo/pulls/1',
         head: { sha: 'pr-head-sha', ref: headRef },
@@ -32,7 +32,7 @@ describe('up_to_date_checker', () => {
   }
 
   const setupBranches = (headSha, targetSha) => {
-    context.octokit.repos.getBranch
+    context.octokit.rest.repos.getBranch
       .mockResolvedValueOnce({ data: { commit: { sha: headSha } } })
       .mockResolvedValueOnce({ data: { commit: { sha: targetSha } } })
   }
@@ -53,7 +53,7 @@ describe('up_to_date_checker', () => {
 
       await checkUpToDate(context, config)
 
-      expect(context.octokit.repos.createCommitStatus).toHaveBeenCalledWith(
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith(
         expect.objectContaining({
           state: 'success',
           context: 'Up-to-date Checker',
@@ -77,7 +77,7 @@ describe('up_to_date_checker', () => {
 
       await checkUpToDate(context, config)
 
-      const statusCall = context.octokit.repos.createCommitStatus.mock.calls[0][0]
+      const statusCall = context.octokit.rest.repos.createCommitStatus.mock.calls[0][0]
       expect(statusCall).toMatchObject({
         state: 'pending',
         context: 'Up-to-date Checker',
@@ -104,14 +104,14 @@ describe('up_to_date_checker', () => {
       await checkUpToDate(context, config)
 
       // Should post success since no tracked files were modified
-      expect(context.octokit.repos.createCommitStatus).toHaveBeenCalledWith(
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith(
         expect.objectContaining({
           state: 'success',
           description: 'PR is up to date with base branch'
         })
       )
       // getBranch should NOT be called when no files match
-      expect(context.octokit.repos.getBranch).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.getBranch).not.toHaveBeenCalled()
     })
 
     it('should do nothing when config is not present', async () => {
@@ -119,8 +119,8 @@ describe('up_to_date_checker', () => {
 
       await checkUpToDate(context, config)
 
-      expect(context.octokit.pulls.get).not.toHaveBeenCalled()
-      expect(context.octokit.repos.createCommitStatus).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.get).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.createCommitStatus).not.toHaveBeenCalled()
     })
 
     it('should work with legacy config format (bare array)', async () => {
@@ -136,10 +136,10 @@ describe('up_to_date_checker', () => {
       await checkUpToDate(context, config)
 
       // Should use default targetBranch 'master'
-      expect(context.octokit.repos.getBranch).toHaveBeenCalledWith(
+      expect(context.octokit.rest.repos.getBranch).toHaveBeenCalledWith(
         expect.objectContaining({ branch: 'master' })
       )
-      expect(context.octokit.repos.createCommitStatus).toHaveBeenCalledWith(
+      expect(context.octokit.rest.repos.createCommitStatus).toHaveBeenCalledWith(
         expect.objectContaining({ state: 'success' })
       )
     })
@@ -157,8 +157,8 @@ describe('up_to_date_checker', () => {
       await checkUpToDate(context, config)
 
       // Should return early without crashing, no file listing or status check
-      expect(context.octokit.pulls.listFiles).not.toHaveBeenCalled()
-      expect(context.octokit.repos.createCommitStatus).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.listFiles).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.createCommitStatus).not.toHaveBeenCalled()
     })
 
     it('should return early when files key is present but null', async () => {
@@ -173,8 +173,8 @@ describe('up_to_date_checker', () => {
 
       await checkUpToDate(context, config)
 
-      expect(context.octokit.pulls.listFiles).not.toHaveBeenCalled()
-      expect(context.octokit.repos.createCommitStatus).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.listFiles).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.createCommitStatus).not.toHaveBeenCalled()
     })
 
     it('should use custom targetBranch from config', async () => {
@@ -192,7 +192,7 @@ describe('up_to_date_checker', () => {
       await checkUpToDate(context, config)
 
       // getBranch is called twice: once for head branch, once for target branch
-      const targetBranchCall = context.octokit.repos.getBranch.mock.calls[1][0]
+      const targetBranchCall = context.octokit.rest.repos.getBranch.mock.calls[1][0]
       expect(targetBranchCall.branch).toBe('develop')
     })
 
@@ -211,7 +211,7 @@ describe('up_to_date_checker', () => {
       await checkUpToDate(context, config)
 
       // When up to date, status uses pr.head.sha from pulls.get (not getBranch)
-      const statusCall = context.octokit.repos.createCommitStatus.mock.calls[0][0]
+      const statusCall = context.octokit.rest.repos.createCommitStatus.mock.calls[0][0]
       expect(statusCall.sha).toBe('pr-head-sha')
     })
   })

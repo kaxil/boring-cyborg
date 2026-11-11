@@ -19,7 +19,7 @@ describe('title_validator', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           title: 'feat(api): add new endpoint',
@@ -27,7 +27,7 @@ describe('title_validator', () => {
         }
       })
 
-      context.octokit.pulls.listCommits.mockResolvedValue({
+      context.octokit.rest.pulls.listCommits.mockResolvedValue({
         data: []
       })
 
@@ -54,7 +54,7 @@ describe('title_validator', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           title: 'invalid title format',
@@ -62,7 +62,7 @@ describe('title_validator', () => {
         }
       })
 
-      context.octokit.pulls.listCommits.mockResolvedValue({
+      context.octokit.rest.pulls.listCommits.mockResolvedValue({
         data: []
       })
 
@@ -88,7 +88,7 @@ describe('title_validator', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           title: 'Some PR title',
@@ -96,7 +96,7 @@ describe('title_validator', () => {
         }
       })
 
-      context.octokit.pulls.listCommits.mockResolvedValue({
+      context.octokit.rest.pulls.listCommits.mockResolvedValue({
         data: [
           { commit: { message: 'feat(api): add new endpoint' } }
         ]
@@ -125,7 +125,7 @@ describe('title_validator', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           title: 'Some PR title',
@@ -133,7 +133,7 @@ describe('title_validator', () => {
         }
       })
 
-      context.octokit.pulls.listCommits.mockResolvedValue({
+      context.octokit.rest.pulls.listCommits.mockResolvedValue({
         data: [
           { commit: { message: 'invalid commit message' } }
         ]
@@ -160,7 +160,7 @@ describe('title_validator', () => {
         }
       }
 
-      context.octokit.pulls.get.mockResolvedValue({
+      context.octokit.rest.pulls.get.mockResolvedValue({
         data: {
           url: 'https://api.github.com/repos/owner/repo/pulls/1',
           title: 'Some PR title',
@@ -168,7 +168,7 @@ describe('title_validator', () => {
         }
       })
 
-      context.octokit.pulls.listCommits.mockResolvedValue({
+      context.octokit.rest.pulls.listCommits.mockResolvedValue({
         data: []
       })
 
@@ -189,7 +189,7 @@ describe('title_validator', () => {
 
       await verifyTitles(context, config)
 
-      expect(context.octokit.pulls.get).not.toHaveBeenCalled()
+      expect(context.octokit.rest.pulls.get).not.toHaveBeenCalled()
       expect(context.octokit.rest.repos.createCommitStatus).not.toHaveBeenCalled()
     })
   })

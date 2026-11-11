@@ -6,7 +6,7 @@ const titleValidator = require('./lib/title_validator')
 const upToDateChecker = require('./lib/up_to_date_checker')
 const utils = require('./lib/utils')
 
-module.exports = (app, { getRouter }) => {
+module.exports = (app, { addHandler }) => {
   app.log.info('Yay, the app was loaded!')
 
   app.onAny(async context => {
@@ -60,46 +60,56 @@ module.exports = (app, { getRouter }) => {
   // "Up to date checker" - Check if PR is up to date with master
   app.on(prEditEvents, withBranchFilter((ctx, config) => upToDateChecker.checkUpToDate(ctx, config)))
 
-  // Only register the /stats endpoint if getRouter is provided and returns a router
-  if (typeof getRouter === 'function') {
-    const router = getRouter('/boring-cyborg')
-    if (router && typeof router.get === 'function') {
-      router.get('/stats', async (req, res) => {
-        try {
-          // Check for STATS_API_KEY authentication
-          const authHeader = req.headers.authorization
-          const statsApiKey = process.env.STATS_API_KEY
+  // Returning false passes the request on to the server's next handler.
+  const statsHandler = async (req, res) => {
+    // Not `new URL()`: it throws on paths like `//`, and this handler sees every request.
+    const pathname = req.url.split('?')[0]
+    if (req.method !== 'GET' || pathname !== '/boring-cyborg/stats') return false
 
-          if (!statsApiKey) {
-            return res.status(500).json({ error: 'STATS_API_KEY not configured' })
-          }
-
-          if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Missing or invalid Authorization header' })
-          }
-
-          const providedKey = authHeader.substring(7) // Remove 'Bearer ' prefix
-          if (providedKey !== statsApiKey) {
-            return res.status(403).json({ error: 'Invalid API key' })
-          }
-
-          // Use the app's authenticated octokit instance
-          const octokit = await app.auth()
-          const installations = await octokit.paginate(octokit.rest.apps.listInstallations)
-          const stats = {
-            totalInstallations: installations.length,
-            installations: installations.map(inst => ({
-              id: inst.id,
-              account: inst.account.login,
-              account_type: inst.account.type
-            }))
-          }
-          res.json(stats)
-        } catch (err) {
-          app.log.error('Error fetching stats:', err)
-          res.status(500).json({ error: 'Failed to fetch stats' })
-        }
-      })
+    const sendJson = (status, body) => {
+      res.writeHead(status, { 'content-type': 'application/json' })
+      res.end(JSON.stringify(body))
+      return true
     }
+
+    try {
+      const authHeader = req.headers.authorization
+      const statsApiKey = process.env.STATS_API_KEY
+
+      if (!statsApiKey) {
+        return sendJson(500, { error: 'STATS_API_KEY not configured' })
+      }
+
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return sendJson(401, { error: 'Missing or invalid Authorization header' })
+      }
+
+      const providedKey = authHeader.substring(7) // Remove 'Bearer ' prefix
+      if (providedKey !== statsApiKey) {
+        return sendJson(403, { error: 'Invalid API key' })
+      }
+
+      // Use the app's authenticated octokit instance
+      const octokit = await app.auth()
+      const installations = await octokit.paginate(octokit.rest.apps.listInstallations)
+      return sendJson(200, {
+        totalInstallations: installations.length,
+        installations: installations.map(inst => ({
+          id: inst.id,
+          account: inst.account.login,
+          account_type: inst.account.type
+        }))
+      })
+    } catch (err) {
+      app.log.error({ err }, 'Error fetching stats')
+      return sendJson(500, { error: 'Failed to fetch stats' })
+    }
+  }
+
+  try {
+    addHandler(statsHandler)
+  } catch (err) {
+    // `probot receive` runs the app without an HTTP server, and its addHandler throws.
+    app.log.debug(`Not serving /boring-cyborg/stats: ${err.message}`)
   }
 }

@@ -25,7 +25,7 @@ describe('issuelink', () => {
   })
 
   it('uses the first matching matcher when no per-matcher filter is set', async () => {
-    context.octokit.pulls.get.mockResolvedValue(
+    context.octokit.rest.pulls.get.mockResolvedValue(
       prWithTitleAndBody('[AIRFLOW-1234] Fix X', 'Issue link: PLACEHOLDER')
     )
 
@@ -36,13 +36,13 @@ describe('issuelink', () => {
       }
     }))
 
-    expect(context.octokit.issues.update).toHaveBeenCalledWith(
+    expect(context.octokit.rest.issues.update).toHaveBeenCalledWith(
       expect.objectContaining({ body: 'Issue link: LINK-AIRFLOW-1234' })
     )
   })
 
   it('skips a matcher whose targetBranchFilter does not match the base ref', async () => {
-    context.octokit.pulls.get.mockResolvedValue(
+    context.octokit.rest.pulls.get.mockResolvedValue(
       prWithTitleAndBody('[AIRFLOW-1234] Fix X', 'Issue link: PLACEHOLDER')
     )
 
@@ -58,13 +58,13 @@ describe('issuelink', () => {
       }
     }))
 
-    expect(context.octokit.issues.update).toHaveBeenCalledWith(
+    expect(context.octokit.rest.issues.update).toHaveBeenCalledWith(
       expect.objectContaining({ body: 'Issue link: MAIN-AIRFLOW-1234' })
     )
   })
 
   it('should handle null PR body without crashing', async () => {
-    context.octokit.pulls.get.mockResolvedValue(
+    context.octokit.rest.pulls.get.mockResolvedValue(
       prWithTitleAndBody('[AIRFLOW-1234] Fix X', null)
     )
 
@@ -76,17 +76,17 @@ describe('issuelink', () => {
     }))
 
     // Should bail out (placeholder not found in null body) without throwing
-    expect(context.octokit.issues.update).not.toHaveBeenCalled()
+    expect(context.octokit.rest.issues.update).not.toHaveBeenCalled()
     expect(context.log.warn).toHaveBeenCalledWith(
       expect.stringContaining('Placeholder not found')
     )
   })
 
   it('should propagate errors from issues.update (await fix)', async () => {
-    context.octokit.pulls.get.mockResolvedValue(
+    context.octokit.rest.pulls.get.mockResolvedValue(
       prWithTitleAndBody('[AIRFLOW-1234] Fix X', 'Issue link: PLACEHOLDER')
     )
-    context.octokit.issues.update.mockRejectedValue(new Error('API rate limited'))
+    context.octokit.rest.issues.update.mockRejectedValue(new Error('API rate limited'))
 
     await expect(
       insertIssueLinkInPrDescription(context, baseConfig({
@@ -100,7 +100,7 @@ describe('issuelink', () => {
 
   it('uses a matcher whose targetBranchFilter matches the base ref', async () => {
     context.payload.pull_request.base.ref = 'release/1.2'
-    context.octokit.pulls.get.mockResolvedValue(
+    context.octokit.rest.pulls.get.mockResolvedValue(
       prWithTitleAndBody('[AIRFLOW-1234] Fix X', 'Issue link: PLACEHOLDER')
     )
 
@@ -116,7 +116,7 @@ describe('issuelink', () => {
       }
     }))
 
-    expect(context.octokit.issues.update).toHaveBeenCalledWith(
+    expect(context.octokit.rest.issues.update).toHaveBeenCalledWith(
       expect.objectContaining({ body: 'Issue link: RELEASE-AIRFLOW-1234' })
     )
   })

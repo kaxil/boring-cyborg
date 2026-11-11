@@ -7,9 +7,9 @@ describe('greetings', () => {
   beforeEach(() => {
     context = createMockContext()
     // Default: no prior commits → handlers fall through to createComment
-    context.octokit.repos.listCommits.mockResolvedValue({ data: [] })
+    context.octokit.rest.repos.listCommits.mockResolvedValue({ data: [] })
     // Default: no prior issues/PRs by the author (only the current one)
-    context.octokit.issues.listForRepo.mockResolvedValue({
+    context.octokit.rest.issues.listForRepo.mockResolvedValue({
       data: [{ number: 1, pull_request: { url: 'x' } }]
     })
     // `paginate(fn, opts)` is used to fetch the PR's own commits; default to empty
@@ -22,10 +22,10 @@ describe('greetings', () => {
 
       await commentOnfirstPR(context, config)
 
-      expect(context.octokit.repos.listCommits).toHaveBeenCalledWith(
+      expect(context.octokit.rest.repos.listCommits).toHaveBeenCalledWith(
         expect.objectContaining({ author: 'testuser', sha: 'main' })
       )
-      expect(context.octokit.issues.createComment).toHaveBeenCalledWith(
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalledWith(
         expect.objectContaining({
           owner: 'owner',
           repo: 'repo',
@@ -37,18 +37,18 @@ describe('greetings', () => {
 
     it('skips when author has a prior commit on the target branch', async () => {
       const config = { firstPRWelcomeComment: 'Welcome!' }
-      context.octokit.repos.listCommits.mockResolvedValue({
+      context.octokit.rest.repos.listCommits.mockResolvedValue({
         data: [{ sha: 'priorsha' }]
       })
 
       await commentOnfirstPR(context, config)
 
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('skips when author has a prior PR even with no prior commits', async () => {
       const config = { firstPRWelcomeComment: 'Welcome!' }
-      context.octokit.issues.listForRepo.mockResolvedValue({
+      context.octokit.rest.issues.listForRepo.mockResolvedValue({
         data: [
           { number: 99, pull_request: { url: 'x' } },
           { number: 1, pull_request: { url: 'x' } }
@@ -57,12 +57,12 @@ describe('greetings', () => {
 
       await commentOnfirstPR(context, config)
 
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('still welcomes when author has only prior issues (no prior PR)', async () => {
       const config = { firstPRWelcomeComment: 'Welcome!' }
-      context.octokit.issues.listForRepo.mockResolvedValue({
+      context.octokit.rest.issues.listForRepo.mockResolvedValue({
         data: [
           { number: 50 }, // issue (no pull_request field)
           { number: 1, pull_request: { url: 'x' } } // the current PR
@@ -71,20 +71,20 @@ describe('greetings', () => {
 
       await commentOnfirstPR(context, config)
 
-      expect(context.octokit.issues.createComment).toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalled()
     })
 
     it('paginates past 100 older issues to find a prior PR on page 2', async () => {
       const config = { firstPRWelcomeComment: 'Welcome!' }
       const page1 = Array.from({ length: 100 }, (_, i) => ({ number: 100 + i }))
       const page2 = [{ number: 500, pull_request: { url: 'x' } }]
-      context.octokit.issues.listForRepo
+      context.octokit.rest.issues.listForRepo
         .mockResolvedValueOnce({ data: page1 })
         .mockResolvedValueOnce({ data: page2 })
 
       await commentOnfirstPR(context, config)
 
-      const calls = context.octokit.issues.listForRepo.mock.calls
+      const calls = context.octokit.rest.issues.listForRepo.mock.calls
       expect(calls).toHaveLength(2)
       expect(calls[0][0]).toMatchObject({
         creator: 'testuser',
@@ -95,26 +95,26 @@ describe('greetings', () => {
         page: 1
       })
       expect(calls[1][0]).toMatchObject({ page: 2, per_page: 100 })
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('stops paginating once a full page returns <100 items', async () => {
       const config = { firstPRWelcomeComment: 'Welcome!' }
       // Single partial page means the author has no more history to scan.
-      context.octokit.issues.listForRepo.mockResolvedValueOnce({
+      context.octokit.rest.issues.listForRepo.mockResolvedValueOnce({
         data: [{ number: 1, pull_request: { url: 'x' } }] // current PR only
       })
 
       await commentOnfirstPR(context, config)
 
-      expect(context.octokit.issues.listForRepo).toHaveBeenCalledTimes(1)
-      expect(context.octokit.issues.listForRepo.mock.calls[0][0]).toMatchObject({
+      expect(context.octokit.rest.issues.listForRepo).toHaveBeenCalledTimes(1)
+      expect(context.octokit.rest.issues.listForRepo.mock.calls[0][0]).toMatchObject({
         page: 1,
         per_page: 100,
         sort: 'created',
         direction: 'asc'
       })
-      expect(context.octokit.issues.createComment).toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalled()
     })
 
     it.each(['MEMBER', 'OWNER', 'COLLABORATOR', 'CONTRIBUTOR'])(
@@ -125,8 +125,8 @@ describe('greetings', () => {
 
         await commentOnfirstPR(context, config)
 
-        expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-        expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+        expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+        expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
       }
     )
 
@@ -136,8 +136,8 @@ describe('greetings', () => {
 
       await commentOnfirstPR(context, config)
 
-      expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('skips the deleted-user ghost login', async () => {
@@ -146,14 +146,14 @@ describe('greetings', () => {
 
       await commentOnfirstPR(context, config)
 
-      expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('swallows 404 from createComment (PR deleted between webhook and handler)', async () => {
       const config = { firstPRWelcomeComment: 'Welcome!' }
       const notFound = Object.assign(new Error('Not Found'), { status: 404 })
-      context.octokit.issues.createComment.mockRejectedValue(notFound)
+      context.octokit.rest.issues.createComment.mockRejectedValue(notFound)
 
       await expect(commentOnfirstPR(context, config)).resolves.not.toThrow()
     })
@@ -161,7 +161,7 @@ describe('greetings', () => {
     it('rethrows non-404 errors from createComment', async () => {
       const config = { firstPRWelcomeComment: 'Welcome!' }
       const serverError = Object.assign(new Error('Internal Server Error'), { status: 500 })
-      context.octokit.issues.createComment.mockRejectedValue(serverError)
+      context.octokit.rest.issues.createComment.mockRejectedValue(serverError)
 
       await expect(commentOnfirstPR(context, config)).rejects.toThrow('Internal Server Error')
     })
@@ -169,8 +169,8 @@ describe('greetings', () => {
     it('does nothing when config key is absent', async () => {
       await commentOnfirstPR(context, {})
 
-      expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
   })
 
@@ -181,7 +181,7 @@ describe('greetings', () => {
 
     it('adds comment for a squash-merged first PR (only merge_commit_sha on base)', async () => {
       const config = { firstPRMergeComment: 'Congrats!' }
-      context.octokit.repos.listCommits.mockResolvedValue({
+      context.octokit.rest.repos.listCommits.mockResolvedValue({
         data: [{ sha: 'mergesha123' }]
       })
       // Squash PR had its own commits on the branch; paginate returns them
@@ -189,7 +189,7 @@ describe('greetings', () => {
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.issues.createComment).toHaveBeenCalledWith(
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalledWith(
         expect.objectContaining({ body: 'Congrats!' })
       )
     })
@@ -199,7 +199,7 @@ describe('greetings', () => {
 
       await commentOnfirstPRMerge(context, config)
 
-      const call = context.octokit.repos.listCommits.mock.calls[0][0]
+      const call = context.octokit.rest.repos.listCommits.mock.calls[0][0]
       expect(call.sha).toBeUndefined()
       expect(call.author).toBe('testuser')
     })
@@ -208,7 +208,7 @@ describe('greetings', () => {
       const config = { firstPRMergeComment: 'Congrats!' }
       // Merge commit + the PR's original commits all land on base with matching shas
       context.octokit.paginate.mockResolvedValue([{ sha: 'branchshaA' }, { sha: 'branchshaB' }])
-      context.octokit.repos.listCommits.mockResolvedValue({
+      context.octokit.rest.repos.listCommits.mockResolvedValue({
         data: [
           { sha: 'mergesha123' },
           { sha: 'branchshaA' },
@@ -218,13 +218,13 @@ describe('greetings', () => {
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.issues.createComment).toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalled()
     })
 
     it('skips when there is a genuinely prior commit beyond the current PR', async () => {
       const config = { firstPRMergeComment: 'Congrats!' }
       context.octokit.paginate.mockResolvedValue([{ sha: 'branchshaA' }])
-      context.octokit.repos.listCommits.mockResolvedValue({
+      context.octokit.rest.repos.listCommits.mockResolvedValue({
         data: [
           { sha: 'mergesha123' },
           { sha: 'branchshaA' },
@@ -234,7 +234,7 @@ describe('greetings', () => {
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('does nothing when PR was closed without merging', async () => {
@@ -243,8 +243,8 @@ describe('greetings', () => {
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it.each(['MEMBER', 'OWNER', 'COLLABORATOR'])(
@@ -255,8 +255,8 @@ describe('greetings', () => {
 
         await commentOnfirstPRMerge(context, config)
 
-        expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-        expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+        expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+        expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
       }
     )
 
@@ -266,14 +266,14 @@ describe('greetings', () => {
       // check and post the comment when prior commits are absent.
       const config = { firstPRMergeComment: 'Congrats!' }
       context.payload.pull_request.author_association = 'CONTRIBUTOR'
-      context.octokit.repos.listCommits.mockResolvedValue({
+      context.octokit.rest.repos.listCommits.mockResolvedValue({
         data: [{ sha: 'mergesha123' }]
       })
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.repos.listCommits).toHaveBeenCalled()
-      expect(context.octokit.issues.createComment).toHaveBeenCalled()
+      expect(context.octokit.rest.repos.listCommits).toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalled()
     })
 
     it('skips bot accounts', async () => {
@@ -282,19 +282,19 @@ describe('greetings', () => {
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('swallows 404 and rethrows 500 from createComment', async () => {
       const config = { firstPRMergeComment: 'Congrats!' }
 
       const notFound = Object.assign(new Error('Not Found'), { status: 404 })
-      context.octokit.issues.createComment.mockRejectedValueOnce(notFound)
+      context.octokit.rest.issues.createComment.mockRejectedValueOnce(notFound)
       await expect(commentOnfirstPRMerge(context, config)).resolves.not.toThrow()
 
       const serverError = Object.assign(new Error('Server Error'), { status: 500 })
-      context.octokit.issues.createComment.mockRejectedValueOnce(serverError)
+      context.octokit.rest.issues.createComment.mockRejectedValueOnce(serverError)
       await expect(commentOnfirstPRMerge(context, config)).rejects.toThrow('Server Error')
     })
 
@@ -303,19 +303,19 @@ describe('greetings', () => {
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('clamps listCommits per_page to 100 even for huge PRs', async () => {
       const config = { firstPRMergeComment: 'Congrats!' }
       const bigPrCommits = Array.from({ length: 250 }, (_, i) => ({ sha: `branchsha${i}` }))
       context.octokit.paginate.mockResolvedValue(bigPrCommits)
-      context.octokit.repos.listCommits.mockResolvedValue({ data: [] })
+      context.octokit.rest.repos.listCommits.mockResolvedValue({ data: [] })
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.repos.listCommits).toHaveBeenCalledWith(
+      expect(context.octokit.rest.repos.listCommits).toHaveBeenCalledWith(
         expect.objectContaining({ per_page: 100 })
       )
     })
@@ -323,13 +323,13 @@ describe('greetings', () => {
     it('still posts comment when pulls.listCommits fails (non-fatal)', async () => {
       const config = { firstPRMergeComment: 'Congrats!' }
       context.octokit.paginate.mockRejectedValue(new Error('network blip'))
-      context.octokit.repos.listCommits.mockResolvedValue({
+      context.octokit.rest.repos.listCommits.mockResolvedValue({
         data: [{ sha: 'mergesha123' }]
       })
 
       await commentOnfirstPRMerge(context, config)
 
-      expect(context.octokit.issues.createComment).toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalled()
     })
   })
 
@@ -339,28 +339,28 @@ describe('greetings', () => {
 
       await commentOnfirstIssue(context, config)
 
-      expect(context.octokit.repos.listCommits).toHaveBeenCalledWith(
+      expect(context.octokit.rest.repos.listCommits).toHaveBeenCalledWith(
         expect.objectContaining({ author: 'testuser' })
       )
-      expect(context.octokit.issues.createComment).toHaveBeenCalledWith(
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalledWith(
         expect.objectContaining({ body: 'Welcome to your first issue!' })
       )
     })
 
     it('skips when author has prior commits', async () => {
       const config = { firstIssueWelcomeComment: 'Welcome!' }
-      context.octokit.repos.listCommits.mockResolvedValue({
+      context.octokit.rest.repos.listCommits.mockResolvedValue({
         data: [{ sha: 'priorsha' }]
       })
 
       await commentOnfirstIssue(context, config)
 
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('skips when author has a prior issue even with no commits', async () => {
       const config = { firstIssueWelcomeComment: 'Welcome!' }
-      context.octokit.issues.listForRepo.mockResolvedValue({
+      context.octokit.rest.issues.listForRepo.mockResolvedValue({
         data: [
           { number: 42 }, // plain issue (no pull_request)
           { number: 1 } // current issue
@@ -369,12 +369,12 @@ describe('greetings', () => {
 
       await commentOnfirstIssue(context, config)
 
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
 
     it('still welcomes when author has only prior PRs (no prior issue)', async () => {
       const config = { firstIssueWelcomeComment: 'Welcome!' }
-      context.octokit.issues.listForRepo.mockResolvedValue({
+      context.octokit.rest.issues.listForRepo.mockResolvedValue({
         data: [
           { number: 99, pull_request: { url: 'x' } }, // old PR
           { number: 1 } // current issue
@@ -383,7 +383,7 @@ describe('greetings', () => {
 
       await commentOnfirstIssue(context, config)
 
-      expect(context.octokit.issues.createComment).toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).toHaveBeenCalled()
     })
 
     it.each(['MEMBER', 'OWNER', 'COLLABORATOR', 'CONTRIBUTOR'])(
@@ -394,8 +394,8 @@ describe('greetings', () => {
 
         await commentOnfirstIssue(context, config)
 
-        expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-        expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+        expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+        expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
       }
     )
 
@@ -403,19 +403,19 @@ describe('greetings', () => {
       const config = { firstIssueWelcomeComment: 'Welcome!' }
 
       const notFound = Object.assign(new Error('Not Found'), { status: 404 })
-      context.octokit.issues.createComment.mockRejectedValueOnce(notFound)
+      context.octokit.rest.issues.createComment.mockRejectedValueOnce(notFound)
       await expect(commentOnfirstIssue(context, config)).resolves.not.toThrow()
 
       const serverError = Object.assign(new Error('Server Error'), { status: 500 })
-      context.octokit.issues.createComment.mockRejectedValueOnce(serverError)
+      context.octokit.rest.issues.createComment.mockRejectedValueOnce(serverError)
       await expect(commentOnfirstIssue(context, config)).rejects.toThrow('Server Error')
     })
 
     it('does nothing when config key is absent', async () => {
       await commentOnfirstIssue(context, {})
 
-      expect(context.octokit.repos.listCommits).not.toHaveBeenCalled()
-      expect(context.octokit.issues.createComment).not.toHaveBeenCalled()
+      expect(context.octokit.rest.repos.listCommits).not.toHaveBeenCalled()
+      expect(context.octokit.rest.issues.createComment).not.toHaveBeenCalled()
     })
   })
 })
