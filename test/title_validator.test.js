@@ -71,12 +71,17 @@ describe('title_validator', () => {
       })
     })
 
-    // 'Wrong PR title: ' is 16 characters. An emoji is one character but two UTF-16 units, so
-    // 124 of them fill the 140 exactly, and a cut by unit would split one.
+    // 'Wrong PR title: ' is 16 characters, so a 124-character title fills the 140 exactly
     it.each([
-      ['cut to 140 characters with an ellipsis', 130, 'Wrong PR title: ' + '🚀'.repeat(123) + '…'],
-      ['left whole at exactly 140 characters', 124, 'Wrong PR title: ' + '🚀'.repeat(124)]
-    ])('should post a failure message that is %s', async (_, emojiCount, expected) => {
+      ['cut to 140 characters with an ellipsis', 'x'.repeat(130), 'Wrong PR title: ' + 'x'.repeat(123) + '…'],
+      ['left whole at exactly 140 characters', 'x'.repeat(124), 'Wrong PR title: ' + 'x'.repeat(124)],
+      ['showing □ for an emoji GitHub refuses', '👾 Rollup develop to staging', 'Wrong PR title: □ Rollup develop to staging'],
+      // Flags, skin tones and joined emoji become one □ each; ✅ is 3 bytes in UTF-8, which GitHub accepts
+      ['showing one □ per multi-part emoji, keeping 3-byte ones', '🇩🇪 Fix ✅ 👨‍👩‍👧 docs 👍🏽', 'Wrong PR title: □ Fix ✅ □ docs □'],
+      ['showing □ for a lone surrogate', 'Fix \uD83D docs', 'Wrong PR title: Fix □ docs'],
+      // Each □ is one character where the emoji was two UTF-16 units, so 10 of them leave room for 103 x
+      ['cut to 140 after the emoji are replaced', '🚀 '.repeat(10) + 'x'.repeat(124), 'Wrong PR title: ' + '□ '.repeat(10) + 'x'.repeat(103) + '…']
+    ])('should post a failure message that is %s', async (_, title, expected) => {
       const config = {
         verifyTitles: {
           titleRegexp: '^(feat|fix|docs)\\(.+\\): .+',
@@ -86,12 +91,25 @@ describe('title_validator', () => {
         }
       }
       context.octokit.rest.pulls.get.mockResolvedValue({
-        data: { url: 'https://api.github.com/repos/owner/repo/pulls/1', title: '🚀'.repeat(emojiCount), head: { sha: 'abc123' } }
+        data: { url: 'https://api.github.com/repos/owner/repo/pulls/1', title, head: { sha: 'abc123' } }
       })
 
       await verifyTitles(context, config)
 
       expect(context.octokit.rest.repos.createCommitStatus.mock.calls[0][0].description).toBe(expected)
+    })
+
+    it('should replace an emoji GitHub refuses in the success message', async () => {
+      const config = {
+        verifyTitles: { titleRegexp: '^feat: .+', alwaysUsePrTitle: true, successMessage: 'Looks good 🎉' }
+      }
+      context.octokit.rest.pulls.get.mockResolvedValue({
+        data: { url: 'https://api.github.com/repos/owner/repo/pulls/1', title: 'feat: Add x', head: { sha: 'abc123' } }
+      })
+
+      await verifyTitles(context, config)
+
+      expect(context.octokit.rest.repos.createCommitStatus.mock.calls[0][0]).toMatchObject({ state: 'success', description: 'Looks good □' })
     })
 
     it('should validate commit titles when not using PR title', async () => {
