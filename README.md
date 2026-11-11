@@ -173,6 +173,7 @@ verifyTitles:
   validateEitherPrOrSingleCommitTitle: true
   # The title the GitHub status should appear from.
   statusTitle: "Title Validator"
+  # GitHub allows 140 characters in a status, so a longer successMessage or failureMessage is cut short with "…".
   # A custom message to be displayed when the title passes validation.
   successMessage: "Validation successful!"
   # A custom message to be displayed when the title fails validation.
