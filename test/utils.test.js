@@ -1,4 +1,5 @@
 const utils = require('../lib/utils')
+const { createMockContext } = require('./helpers')
 
 function makeContext (baseRef) {
   return {
@@ -34,6 +35,39 @@ describe('utils', () => {
 
       expect(context.config).toHaveBeenCalledWith('boring-cyborg.yml', {})
       expect(result).toEqual({})
+    })
+  })
+
+  describe('getPr', () => {
+    it('should fetch the PR once per context, even for concurrent callers', async () => {
+      const context = createMockContext()
+      context.octokit.rest.pulls.get.mockResolvedValue({ data: { number: 1, title: 'A PR' } })
+
+      const results = await Promise.all([utils.getPr(context), utils.getPr(context), utils.getPr(context)])
+
+      expect(results).toEqual([{ number: 1, title: 'A PR' }, { number: 1, title: 'A PR' }, { number: 1, title: 'A PR' }])
+      expect(context.octokit.rest.pulls.get).toHaveBeenCalledTimes(1)
+      expect(context.octokit.rest.pulls.get).toHaveBeenCalledWith({ owner: 'owner', repo: 'repo', pull_number: 1 })
+
+      const otherContext = createMockContext()
+      otherContext.octokit.rest.pulls.get.mockResolvedValue({ data: { number: 1 } })
+      await utils.getPr(otherContext)
+      expect(otherContext.octokit.rest.pulls.get).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('getPrFiles', () => {
+    it('should list every page of the PR files once per context', async () => {
+      const context = createMockContext()
+      context.octokit.paginate.mockResolvedValue([{ filename: 'a.js' }])
+
+      await Promise.all([utils.getPrFiles(context), utils.getPrFiles(context)])
+
+      expect(context.octokit.paginate).toHaveBeenCalledTimes(1)
+      expect(context.octokit.paginate).toHaveBeenCalledWith(
+        context.octokit.rest.pulls.listFiles,
+        { owner: 'owner', repo: 'repo', pull_number: 1, per_page: 100 }
+      )
     })
   })
 

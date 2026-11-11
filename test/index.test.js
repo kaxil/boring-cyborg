@@ -3,6 +3,7 @@ const Stream = require('stream')
 const myProbotApp = require('../index.js')
 const utils = require('../lib/utils')
 const labeler = require('../lib/labeler')
+const reviewer = require('../lib/reviewer')
 const greetings = require('../lib/greetings')
 const issuelink = require('../lib/issuelink')
 const titleValidator = require('../lib/title_validator')
@@ -81,32 +82,6 @@ describe('Boring Cyborg App Integration', () => {
         log.msg === 'Yay, the app was loaded!'
       )
       expect(appLoadedLogs.length).toBe(1)
-    })
-
-    it('should register event handlers', () => {
-      const originalOn = probot.on
-      const originalOnAny = probot.onAny
-      const eventHandlers = []
-
-      probot.on = jest.fn((events, handler) => {
-        eventHandlers.push({ events, handler })
-        return originalOn.call(probot, events, handler)
-      })
-
-      probot.onAny = jest.fn((handler) => {
-        eventHandlers.push({ events: '*', handler })
-        return originalOnAny.call(probot, handler)
-      })
-
-      myProbotApp(probot, { addHandler: jest.fn() })
-
-      // Check that handlers were registered
-      expect(probot.onAny).toHaveBeenCalledTimes(1)
-      expect(probot.on).toHaveBeenCalledWith(['pull_request.opened', 'pull_request.reopened', 'pull_request.edited', 'pull_request.synchronize'], expect.any(Function))
-      expect(probot.on).toHaveBeenCalledWith(['pull_request.labeled', 'pull_request.unlabeled'], expect.any(Function))
-      expect(probot.on).toHaveBeenCalledWith('pull_request.opened', expect.any(Function))
-      expect(probot.on).toHaveBeenCalledWith('pull_request.closed', expect.any(Function))
-      expect(probot.on).toHaveBeenCalledWith('issues.opened', expect.any(Function))
     })
 
     it('should use onAny instead of on("*") for universal event handler', () => {
@@ -202,21 +177,64 @@ describe('Boring Cyborg App Integration', () => {
       expect(logOutput.map(log => log.msg)).toContain('pull_request.opened')
     })
 
-    it('should invoke multiple handlers for the same event', async () => {
-      jest.spyOn(utils, 'getConfig').mockResolvedValue({
-        labelPRBasedOnFilePath: { frontend: ['src/**'] },
-        verifyTitles: { titleRegexp: '^fix:' }
-      })
-      const labelerSpy = jest.spyOn(labeler, 'addLabelsOnPr').mockResolvedValue()
-      const titleSpy = jest.spyOn(titleValidator, 'verifyTitles').mockResolvedValue()
+    const spyOnFeatures = () => ({
+      labeler: jest.spyOn(labeler, 'addLabelsOnPr').mockResolvedValue(),
+      reviewer: jest.spyOn(reviewer, 'addReviewersOnPr').mockResolvedValue(),
+      firstPrGreeting: jest.spyOn(greetings, 'commentOnfirstPR').mockResolvedValue(),
+      mergeGreeting: jest.spyOn(greetings, 'commentOnfirstPRMerge').mockResolvedValue(),
+      issueLink: jest.spyOn(issuelink, 'insertIssueLinkInPrDescription').mockResolvedValue(),
+      titleValidator: jest.spyOn(titleValidator, 'verifyTitles').mockResolvedValue(),
+      upToDateChecker: jest.spyOn(upToDateChecker, 'checkUpToDate').mockResolvedValue()
+    })
+
+    it.each([
+      ['opened', ['labeler', 'firstPrGreeting', 'issueLink', 'titleValidator', 'upToDateChecker']],
+      ['reopened', ['labeler', 'issueLink', 'titleValidator', 'upToDateChecker']],
+      ['edited', ['labeler', 'issueLink', 'titleValidator', 'upToDateChecker']],
+      ['synchronize', ['labeler', 'issueLink', 'titleValidator', 'upToDateChecker']],
+      ['labeled', ['reviewer']],
+      ['unlabeled', ['reviewer']],
+      ['closed', ['mergeGreeting']]
+    ])('should run only the features for pull_request.%s, loading the config once', async (action, expected) => {
+      const getConfig = jest.spyOn(utils, 'getConfig').mockResolvedValue({})
+      const features = spyOnFeatures()
 
       myProbotApp(probot, { addHandler: jest.fn() })
 
-      await probot.receive({ id: '1', name: 'pull_request', payload: prPayload('opened', 'main') })
+      await probot.receive({ id: '1', name: 'pull_request', payload: prPayload(action, 'main') })
 
-      // Both handlers fire on the same event
-      expect(labelerSpy).toHaveBeenCalled()
-      expect(titleSpy).toHaveBeenCalled()
+      const ran = Object.entries(features).filter(([, spy]) => spy.mock.calls.length > 0).map(([name]) => name)
+      expect(ran).toEqual(expected)
+      expect(getConfig).toHaveBeenCalledTimes(1)
+      // Every feature gets the same context, so utils.getPr can share one PR fetch between them
+      expect(new Set(expected.map(name => features[name].mock.calls[0][0])).size).toBe(1)
+    })
+
+    it('should report an error shared by several features once', async () => {
+      jest.spyOn(utils, 'getConfig').mockResolvedValue({})
+      const features = spyOnFeatures()
+      const shared = new Error('pulls.get failed')
+      features.labeler.mockRejectedValue(shared)
+      features.titleValidator.mockRejectedValue(shared)
+
+      myProbotApp(probot, { addHandler: jest.fn() })
+
+      const error = await probot.receive({ id: '1', name: 'pull_request', payload: prPayload('opened', 'main') }).catch(e => e)
+      expect(error.errors).toEqual([shared])
+    })
+
+    it('should still run the other features when one fails, and report the failure', async () => {
+      jest.spyOn(utils, 'getConfig').mockResolvedValue({})
+      const features = spyOnFeatures()
+      features.labeler.mockRejectedValue(new Error('labeler broke'))
+
+      myProbotApp(probot, { addHandler: jest.fn() })
+
+      await expect(
+        probot.receive({ id: '1', name: 'pull_request', payload: prPayload('opened', 'main') })
+      ).rejects.toThrow('labeler broke')
+      expect(features.titleValidator).toHaveBeenCalled()
+      expect(features.upToDateChecker).toHaveBeenCalled()
     })
   })
 

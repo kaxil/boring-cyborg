@@ -74,14 +74,15 @@ function createMockContext (overrides = {}) {
           listForRepo: jest.fn()
         },
         repos: {
-          getBranch: jest.fn(),
+          compareCommits: jest.fn(),
           createCommitStatus: jest.fn(),
           listCommits: jest.fn()
         }
       }
     },
     issue: jest.fn((params = {}) => ({ owner: 'owner', repo: 'repo', issue_number: 1, ...params })),
-    repo: jest.fn((params = {}) => ({ owner: 'owner', repo: 'repo', ...params }))
+    repo: jest.fn((params = {}) => ({ owner: 'owner', repo: 'repo', ...params })),
+    pullRequest: jest.fn((params = {}) => ({ owner: 'owner', repo: 'repo', pull_number: payload.pull_request?.number ?? 1, ...params }))
   }
 }
 
