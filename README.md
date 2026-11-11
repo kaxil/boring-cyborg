@@ -180,10 +180,11 @@ verifyTitles:
   failureMessage: "Wrong ${type} title: ${title}"
 
 ###### PR/Branch Up-To-Date Checker ####################################################################################
-# Check if the branch is up to date with master when certain files are modified
+# Check if the branch is up to date with its target branch when certain files are modified.
+# A PR is up to date when it contains the latest commit of the target branch.
 checkUpToDate:
-  # The default branch is "master", change the branch if you want to check against a different target branch
-  targetBranch: master
+  # Optional: the branch to check against. Defaults to the branch the PR targets.
+  targetBranch: main
   files:
   # File paths that you want to check for
   # In this example, it checks if the branch is up to date when alembic migrations are modified in the PR.

@@ -19,7 +19,7 @@ Style is [standard](https://standardjs.com/): no semicolons, two-space indent, s
 
 ## Architecture
 
-`index.js` wires webhook events to feature modules in `lib/`. Every PR handler is wrapped in `withBranchFilter`, which loads the config once (`utils.getConfig`) and drops the event if the PR's base ref doesn't match the top-level `targetBranchFilter`. `issues.opened` is not wrapped. Several features listen on the same `prEditEvents` list (opened, reopened, edited, synchronize), so one webhook fans out to the labeler, issue linker, title validator and up-to-date checker.
+`index.js` wires webhook events to feature modules in `lib/`. PR features are listed in `prFeatures` with the events each handles, and a single handler serves all of them: it loads the config once (`utils.getConfig`), drops the event if the PR's base ref doesn't match the top-level `targetBranchFilter`, then runs every matching feature with `Promise.allSettled`. It is one handler on purpose: Probot builds a new `Context` per handler, and `utils.getPr` / `utils.getPrFiles` memoize on the `Context`, so sharing it is what makes each feature's `pulls.get` and `pulls.listFiles` hit the API once per webhook. Features should read the PR and its files through those helpers. `issues.opened` has its own handler.
 
 Each `lib/<feature>.js` exports an async `(context, config)` function that returns early unless its config key (`labelPRBasedOnFilePath`, `addReviewerBasedOnLabel`, `verifyTitles`, ...) is present. Missing config means the feature is off; there is no global enable flag.
 

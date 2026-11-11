@@ -17,12 +17,6 @@ module.exports = (app, { addHandler }) => {
     }
   })
 
-  const withBranchFilter = (handler) => async (context) => {
-    const config = await utils.getConfig(context)
-    if (!utils.shouldProcessPr(context, config)) return
-    await handler(context, config)
-  }
-
   const prEditEvents = [
     'pull_request.opened',
     'pull_request.reopened',
@@ -30,35 +24,46 @@ module.exports = (app, { addHandler }) => {
     'pull_request.synchronize'
   ]
 
-  // "Labeler" - Add Labels on PRs
-  app.on(prEditEvents, withBranchFilter((ctx, config) => labeler.addLabelsOnPr(ctx, config)))
+  const prFeatures = [
+    // "Labeler" - Add Labels on PRs
+    { events: prEditEvents, run: (ctx, config) => labeler.addLabelsOnPr(ctx, config) },
+    // "Reviewer" - Assign reviewers on PRs based on label
+    { events: ['pull_request.labeled', 'pull_request.unlabeled'], run: (ctx, config) => reviewer.addReviewersOnPr(ctx, config) },
+    // "Greetings" - Welcome Authors on opening their first PR
+    { events: ['pull_request.opened'], run: (ctx, config) => greetings.commentOnfirstPR(ctx, config) },
+    // "Greetings" - Congratulate Authors on getting their first PR merged
+    { events: ['pull_request.closed'], run: (ctx, config) => greetings.commentOnfirstPRMerge(ctx, config) },
+    // "IssueLink" - Update issue links in PRs
+    { events: prEditEvents, run: (ctx, config) => issuelink.insertIssueLinkInPrDescription(ctx, config) },
+    // "Commit Validator" - validate commit messages for regular expression
+    { events: prEditEvents, run: (ctx, config) => titleValidator.verifyTitles(ctx, config) },
+    // "Up to date checker" - Check if PR is up to date with its target branch
+    { events: prEditEvents, run: (ctx, config) => upToDateChecker.checkUpToDate(ctx, config) }
+  ]
 
-  // "Reviewer" - Assign reviewers on PRs based on label
-  app.on([
-    'pull_request.labeled',
-    'pull_request.unlabeled'
-  ], withBranchFilter((ctx, config) => reviewer.addReviewersOnPr(ctx, config)))
+  // One handler for every PR event, because Probot gives each handler its own Context. Sharing one
+  // loads the config once per webhook, and lets utils.getPr/getPrFiles fetch once for all features.
+  app.on([...new Set(prFeatures.flatMap(feature => feature.events))], async context => {
+    const event = `${context.name}.${context.payload.action}`
+    const config = await utils.getConfig(context)
+    if (!utils.shouldProcessPr(context, config)) return
 
-  // "Greetings" - Welcome Authors on opening their first PR
-  app.on('pull_request.opened', withBranchFilter((ctx, config) => greetings.commentOnfirstPR(ctx, config)))
-
-  // "Greetings" - Congratulate Authors on getting their first PR merged
-  app.on('pull_request.closed', withBranchFilter((ctx, config) => greetings.commentOnfirstPRMerge(ctx, config)))
+    // Features are independent, so one failing must not stop the others
+    const results = await Promise.allSettled(
+      prFeatures.filter(feature => feature.events.includes(event)).map(feature => feature.run(context, config))
+    )
+    // Features that awaited the same failed utils.getPr call reject with the same error, so dedupe
+    const errors = [...new Set(results.filter(result => result.status === 'rejected').map(result => result.reason))]
+    // A lone error is thrown as is, so Probot logs it the way it logged a failing handler before
+    if (errors.length === 1) throw errors[0]
+    if (errors.length > 1) throw new AggregateError(errors, errors.map(error => error.message).join('\n'))
+  })
 
   // "Greetings" - Welcome Authors on opening their first Issue
   app.on('issues.opened', async context => {
     const config = await utils.getConfig(context)
     await greetings.commentOnfirstIssue(context, config)
   })
-
-  // "IssueLink" - Update issue links in PRs
-  app.on(prEditEvents, withBranchFilter((ctx, config) => issuelink.insertIssueLinkInPrDescription(ctx, config)))
-
-  // "Commit Validator" - validate commit messages for regular expression
-  app.on(prEditEvents, withBranchFilter((ctx, config) => titleValidator.verifyTitles(ctx, config)))
-
-  // "Up to date checker" - Check if PR is up to date with master
-  app.on(prEditEvents, withBranchFilter((ctx, config) => upToDateChecker.checkUpToDate(ctx, config)))
 
   // Returning false passes the request on to the server's next handler.
   const statsHandler = async (req, res) => {
