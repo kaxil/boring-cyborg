@@ -69,6 +69,7 @@ function createMockContext (overrides = {}) {
         },
         issues: {
           addLabels: jest.fn(),
+          removeLabel: jest.fn(),
           createComment: jest.fn(),
           update: jest.fn(),
           listForRepo: jest.fn()
